@@ -322,6 +322,11 @@ public abstract class IOUtil
 
 	public static void write(OutputStream stream, String rawSource)
 	{
+		write(stream, rawSource, null);
+	}
+	
+	public static void write(OutputStream stream, String rawSource, String charset)
+	{
 		if (stream == null)
 		{
 			return;
@@ -331,11 +336,15 @@ public abstract class IOUtil
 		{
 			rawSource = StringUtil.EMPTY;
 		}
+		if (charset == null)
+		{
+			charset = "UTF-8"; //$NON-NLS-1$
+		}
 
 		Writer writer = null;
 		try
 		{
-			writer = new OutputStreamWriter(stream);
+			writer = new OutputStreamWriter(stream, charset);
 			writer.write(rawSource);
 		}
 		catch (IOException e)

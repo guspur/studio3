@@ -14,10 +14,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.text.Document;
 
+import com.aptana.core.build.IValidationItem;
 import com.aptana.editor.common.parsing.FileService;
 import com.aptana.editor.common.tests.util.TestProject;
 import com.aptana.editor.common.validation.AbstractValidatorTestCase;
-import com.aptana.editor.common.validator.IValidationItem;
 import com.aptana.editor.common.validator.IValidationManager;
 import com.aptana.editor.css.ICSSConstants;
 import com.aptana.editor.html.IHTMLConstants;

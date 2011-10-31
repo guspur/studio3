@@ -8,19 +8,20 @@
 package com.aptana.core.build;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.IProgressMonitor;
+
+import com.aptana.index.core.build.BuildContext;
 
 public interface IBuildParticipant
 {
 
 	public void clean(IProject project, IProgressMonitor monitor);
 
-	public void fullBuild(IProject project, IProgressMonitor monitor);
-
-	public void incrementalBuild(IResourceDelta delta, IProject project, IProgressMonitor monitor);
-
 	public int getPriority();
 
 	public void setPriority(int priority);
+
+	public void buildFile(BuildContext context, IProgressMonitor monitor);
+
+	public void deleteFile(BuildContext context, IProgressMonitor monitor);
 }

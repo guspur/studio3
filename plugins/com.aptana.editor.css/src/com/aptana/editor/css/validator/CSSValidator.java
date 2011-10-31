@@ -33,9 +33,9 @@ import org.w3c.css.properties.PropertiesLoader;
 import org.w3c.css.util.ApplContext;
 import org.w3c.css.util.Utf8Properties;
 
+import com.aptana.core.build.IValidationItem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.URLEncoder;
-import com.aptana.editor.common.validator.IValidationItem;
 import com.aptana.editor.common.validator.IValidationManager;
 import com.aptana.editor.common.validator.IValidator;
 import com.aptana.editor.common.validator.ValidationManager;

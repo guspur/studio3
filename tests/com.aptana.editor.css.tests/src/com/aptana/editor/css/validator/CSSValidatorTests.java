@@ -12,8 +12,8 @@ import java.util.List;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 
+import com.aptana.core.build.IValidationItem;
 import com.aptana.editor.common.validation.AbstractValidatorTestCase;
-import com.aptana.editor.common.validator.IValidationItem;
 import com.aptana.editor.css.ICSSConstants;
 import com.aptana.parsing.ParseState;
 

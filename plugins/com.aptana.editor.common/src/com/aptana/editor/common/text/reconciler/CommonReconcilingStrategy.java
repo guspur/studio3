@@ -8,9 +8,12 @@
 package com.aptana.editor.common.text.reconciler;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -19,9 +22,15 @@ import org.eclipse.jface.text.reconciler.DirtyRegion;
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy;
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPropertyListener;
 
+import com.aptana.buildpath.core.BuildPathCorePlugin;
+import com.aptana.core.build.IBuildParticipant;
+import com.aptana.core.build.IBuildParticipantManager;
+import com.aptana.core.build.ReconcileContext;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.editor.common.AbstractThemeableEditor;
 import com.aptana.editor.common.CommonEditorPlugin;
@@ -42,6 +51,7 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 	private IProgressMonitor fMonitor;
 
 	private IFoldingComputer folder;
+	private IDocument fDocument;
 
 	public CommonReconcilingStrategy(AbstractThemeableEditor editor)
 	{
@@ -54,7 +64,7 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 				if (propId == IEditorPart.PROP_INPUT)
 				{
 					reconcile(false, true);
-	}
+				}
 			}
 		});
 	}
@@ -78,6 +88,7 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 	{
 		folder = createFoldingComputer(document);
 		fEditor.getFileService().setDocument(document);
+		fDocument = document;
 	}
 
 	protected IFoldingComputer createFoldingComputer(IDocument document)
@@ -194,7 +205,56 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 				return;
 			}
 			fEditor.getFileService().validate();
+			runParticipants();
 		}
+	}
+
+	private void runParticipants()
+	{
+		// FIXME Fold the validation into build participants...
+		final IFile file = getFile();
+		if (file == null)
+		{
+			return;
+		}
+
+		String contentTypeId = fEditor.getFileService().getContentType();
+		ReconcileContext context = new ReconcileContext(contentTypeId, file, fDocument.get());
+		IBuildParticipantManager manager = BuildPathCorePlugin.getDefault().getBuildParticipantManager();
+		List<IBuildParticipant> participants = manager.getBuildParticipants(contentTypeId);
+		if (participants != null && !participants.isEmpty())
+		{
+			SubMonitor sub = SubMonitor.convert(fMonitor, participants.size());
+			for (IBuildParticipant participant : participants)
+			{
+				participant.buildFile(context, sub.newChild(1));
+			}
+			sub.done();
+		}
+
+		reportProblems(context);
+	}
+
+	private void reportProblems(ReconcileContext context)
+	{
+		// TODO Generate annotations on file from problems stored on context! Much like how the folding annotations get
+		// updated! See CompilationUnitAnnotationModel in JDT UI.
+	}
+
+	private IFile getFile()
+	{
+		if (fEditor != null)
+		{
+			IEditorInput editorInput = fEditor.getEditorInput();
+
+			if (editorInput instanceof IFileEditorInput)
+			{
+				IFileEditorInput fileEditorInput = (IFileEditorInput) editorInput;
+				return fileEditorInput.getFile();
+			}
+		}
+
+		return null;
 	}
 
 	public void fullReconcile()

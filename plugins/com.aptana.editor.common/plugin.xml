@@ -694,4 +694,11 @@
          </actionSet>
       </perspectiveExtension>
    </extension>
+   <extension
+         point="com.aptana.buildpath.core.buildParticipants">
+      <participant
+            class="com.aptana.editor.common.validator.LegacyValidationBuildParticipant"
+            priority="60">
+      </participant>
+   </extension>
 </plugin>

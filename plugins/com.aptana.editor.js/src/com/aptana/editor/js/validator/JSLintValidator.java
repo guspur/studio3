@@ -25,9 +25,9 @@ import org.mozilla.javascript.ScriptOrFnNode;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.optimizer.Codegen;
 
+import com.aptana.core.build.IValidationItem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.StreamUtil;
-import com.aptana.editor.common.validator.IValidationItem;
 import com.aptana.editor.common.validator.IValidationManager;
 import com.aptana.editor.common.validator.IValidator;
 import com.aptana.editor.common.validator.ValidationManager;

@@ -29,9 +29,9 @@ import com.aptana.editor.html.parsing.HTMLTagScanner.TokenType;
 import com.aptana.editor.html.parsing.ast.HTMLCommentNode;
 import com.aptana.editor.html.parsing.ast.HTMLElementNode;
 import com.aptana.editor.html.parsing.ast.HTMLNode;
-import com.aptana.editor.html.parsing.ast.IHTMLNodeTypes;
 import com.aptana.editor.html.parsing.ast.HTMLSpecialNode;
 import com.aptana.editor.html.parsing.ast.HTMLTextNode;
+import com.aptana.editor.html.parsing.ast.IHTMLNodeTypes;
 import com.aptana.editor.html.parsing.lexer.HTMLTokens;
 import com.aptana.editor.js.IJSConstants;
 import com.aptana.parsing.IParseState;
@@ -90,8 +90,19 @@ public class HTMLParser implements IParser
 		fTagScanner = new HTMLTagScanner();
 		fElementStack = new Stack<IParseNode>();
 
-		fParseState = (HTMLParseState) parseState;
-		String source = new String(fParseState.getSource());
+		String source = new String(parseState.getSource());
+		if (parseState instanceof HTMLParseState)
+		{
+			fParseState = (HTMLParseState) parseState;
+		}
+		else
+		{
+			fParseState = new HTMLParseState();
+			fParseState.setEditState(source, null, parseState.getStartingOffset(), parseState.getRemovedLength());
+			fParseState.setSkippedRanges(parseState.getSkippedRanges());
+			fParseState.setProgressMonitor(parseState.getProgressMonitor());
+		}
+
 		fScanner.setSource(source);
 
 		fParseState.clearErrors();
@@ -111,7 +122,15 @@ public class HTMLParser implements IParser
 			parseAll(source);
 			root.setCommentNodes(fCommentNodes.toArray(new IParseNode[fCommentNodes.size()]));
 
-			fParseState.setParseResult(root);
+			// If we wrapped the parse state, copy the collected errors back over to original
+			if (!(parseState instanceof HTMLParseState))
+			{
+				for (IParseError error : fParseState.getErrors())
+				{
+					parseState.addError(error);
+				}
+			}
+			parseState.setParseResult(root);
 		}
 		finally
 		{

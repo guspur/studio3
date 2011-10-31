@@ -10,6 +10,7 @@ package com.aptana.editor.common.validator;
 import java.net.URI;
 import java.util.List;
 
+import com.aptana.core.build.IValidationItem;
 import com.aptana.parsing.IParseState;
 
 public interface IValidationManager

@@ -252,4 +252,9 @@ public class FileService
 	{
 		fValidationManager.setResource(resource);
 	}
+	
+	public String getContentType()
+	{
+		return contentType;
+	}
 }

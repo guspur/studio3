@@ -5,7 +5,7 @@
  * Please see the license.html included with this distribution for details.
  * Any modifications to this file must keep this entire header intact.
  */
-package com.aptana.editor.common.validator;
+package com.aptana.core.build;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +21,15 @@ public class ValidationItem implements IValidationItem
 	private final int length;
 	private int lineNumber;
 	private final String sourcePath;
+	private int priority;
 
 	public ValidationItem(int severity, String message, int offset, int length, int lineNumber, String sourcePath)
+	{
+		this(severity, message, offset, length, lineNumber, sourcePath, IMarker.PRIORITY_NORMAL);
+	}
+
+	public ValidationItem(int severity, String message, int offset, int length, int lineNumber, String sourcePath,
+			int priority)
 	{
 		this.severity = severity;
 		this.message = message;
@@ -30,6 +37,7 @@ public class ValidationItem implements IValidationItem
 		this.length = length;
 		this.lineNumber = lineNumber;
 		this.sourcePath = sourcePath;
+		this.priority = priority;
 	}
 
 	public int getOffset()
@@ -45,6 +53,11 @@ public class ValidationItem implements IValidationItem
 	public int getLineNumber()
 	{
 		return lineNumber;
+	}
+
+	public int getPriority()
+	{
+		return priority;
 	}
 
 	public String getMessage()

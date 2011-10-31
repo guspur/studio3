@@ -31,6 +31,8 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.osgi.util.NLS;
 
+import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.ValidationItem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.resources.IUniformResource;
 import com.aptana.core.resources.MarkerUtils;

@@ -17,12 +17,12 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.text.Document;
 
+import com.aptana.core.build.IValidationItem;
 import com.aptana.core.util.EclipseUtil;
 import com.aptana.editor.common.CommonEditorPlugin;
 import com.aptana.editor.common.parsing.FileService;
 import com.aptana.editor.common.preferences.IPreferenceConstants;
 import com.aptana.editor.common.tests.util.TestProject;
-import com.aptana.editor.common.validator.IValidationItem;
 import com.aptana.editor.common.validator.IValidationManager;
 import com.aptana.parsing.IParseState;
 
