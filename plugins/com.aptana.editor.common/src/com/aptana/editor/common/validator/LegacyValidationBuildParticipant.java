@@ -1,6 +1,14 @@
+/**
+ * Aptana Studio
+ * Copyright (c) 2005-2011 by Appcelerator, Inc. All Rights Reserved.
+ * Licensed under the terms of the GNU Public License (GPL) v3 (with exceptions).
+ * Please see the license.html included with this distribution for details.
+ * Any modifications to this file must keep this entire header intact.
+ */
 package com.aptana.editor.common.validator;
 
 import java.net.URI;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,17 +80,17 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 
 	private static String getSelectedValidatorsPrefKey(String language)
 	{
-		return language + ":" + IPreferenceConstants.SELECTED_VALIDATORS; //$NON-NLS-1$
+		return MessageFormat.format("{0}:{1}", language, IPreferenceConstants.SELECTED_VALIDATORS); //$NON-NLS-1$
 	}
 
 	private static String getFilterExpressionsPrefKey(String language)
 	{
-		return language + ":" + IPreferenceConstants.FILTER_EXPRESSIONS; //$NON-NLS-1$
+		return MessageFormat.format("{0}:{1}", language, IPreferenceConstants.FILTER_EXPRESSIONS); //$NON-NLS-1$
 	}
 
 	private static String getParseErrorEnabledPrefKey(String language)
 	{
-		return language + ":" + IPreferenceConstants.PARSE_ERROR_ENABLED; //$NON-NLS-1$
+		return MessageFormat.format("{0}:{1}", language, IPreferenceConstants.PARSE_ERROR_ENABLED); //$NON-NLS-1$
 	}
 
 	public void buildFile(BuildContext context, IProgressMonitor monitor)
