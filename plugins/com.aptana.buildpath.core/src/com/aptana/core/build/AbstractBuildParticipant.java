@@ -17,6 +17,13 @@ import com.aptana.core.resources.TaskTag;
 import com.aptana.core.util.StringUtil;
 import com.aptana.parsing.ast.IParseNode;
 
+/**
+ * It is recommended for instances of IBuildParticipant to subclass this class. This takes care of the getter/setter for
+ * priority, as well as provides some helper methods for detecting tasks, generating task IValidationItems and
+ * determining the line number of an offset in the document.
+ * 
+ * @author cwilliams
+ */
 public abstract class AbstractBuildParticipant implements IBuildParticipant
 {
 
@@ -74,7 +81,6 @@ public abstract class AbstractBuildParticipant implements IBuildParticipant
 		{
 			text = text.toLowerCase();
 		}
-		int offset = initialOffset;
 		String[] lines = StringUtil.LINE_SPLITTER.split(text);
 		for (String line : lines)
 		{
@@ -97,12 +103,12 @@ public abstract class AbstractBuildParticipant implements IBuildParticipant
 				{
 					message = message.substring(0, message.length() - commentEnding.length()).trim();
 				}
-				int start = commentNode.getStartingOffset() + offset + index;
+				// Start of comment + index of line + index of tag on line + initial offset
+				int lineIndex = text.indexOf(line);
+				int start = commentNode.getStartingOffset() + lineIndex + index + initialOffset;
 				tasks.add(createTask(filePath, message, entry.getPriority(), getLineNumber(start, source), start, start
 						+ message.length()));
 			}
-			// FIXME This doesn't take the newline into account from split!
-			offset += line.length();
 		}
 		return tasks;
 	}
