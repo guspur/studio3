@@ -29,6 +29,7 @@ import com.aptana.core.build.IBuildParticipantManager;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.EclipseUtil;
 import com.aptana.core.util.IConfigurationElementProcessor;
+import com.aptana.core.util.StringUtil;
 
 public class BuildParticipantManager implements IBuildParticipantManager
 {
@@ -74,9 +75,9 @@ public class BuildParticipantManager implements IBuildParticipantManager
 				}
 				catch (CoreException e)
 				{
-					IdeLog.logError(BuildPathCorePlugin.getDefault(), MessageFormat.format(
-							"Unable to generate instance of build participant: {0}",
-							entry.getKey().getAttribute(ATTR_CLASS)), e);
+					IdeLog.logError(BuildPathCorePlugin.getDefault(),
+							MessageFormat.format("Unable to generate instance of build participant: {0}", //$NON-NLS-1$
+									entry.getKey().getAttribute(ATTR_CLASS)), e);
 				}
 			}
 		}
@@ -99,7 +100,7 @@ public class BuildParticipantManager implements IBuildParticipantManager
 		IBuildParticipant participant = (IBuildParticipant) ice.createExecutableExtension(ATTR_CLASS);
 		String rawPriority = ice.getAttribute(ATTR_PRIORITY);
 		int priority = DEFAULT_PRIORITY;
-		if (rawPriority != null && rawPriority.length() > 0)
+		if (!StringUtil.isEmpty(rawPriority))
 		{
 			try
 			{
@@ -108,7 +109,7 @@ public class BuildParticipantManager implements IBuildParticipantManager
 			catch (Exception e)
 			{
 				IdeLog.logWarning(BuildPathCorePlugin.getDefault(), MessageFormat.format(
-						"Unable to parse priority value ({0}) as an integer, defaulting to 50.", rawPriority), e);
+						"Unable to parse priority value ({0}) as an integer, defaulting to 50.", rawPriority), e); //$NON-NLS-1$
 			}
 		}
 		participant.setPriority(priority);
@@ -165,14 +166,11 @@ public class BuildParticipantManager implements IBuildParticipantManager
 							Set<IContentType> types = new HashSet<IContentType>();
 
 							IConfigurationElement[] contentTypes = element.getChildren(CONTENT_TYPE_BINDING);
-							if (contentTypes != null && contentTypes.length > 0)
+							for (IConfigurationElement contentTypeBinding : contentTypes)
 							{
-								for (IConfigurationElement contentTypeBinding : contentTypes)
-								{
-									String contentTypeId = contentTypeBinding.getAttribute(CONTENT_TYPE_ID);
-									IContentType type = manager.getContentType(contentTypeId);
-									types.add(type);
-								}
+								String contentTypeId = contentTypeBinding.getAttribute(CONTENT_TYPE_ID);
+								IContentType type = manager.getContentType(contentTypeId);
+								types.add(type);
 							}
 							map.put(element, types);
 						}
