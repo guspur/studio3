@@ -123,4 +123,20 @@ public class ValidationItem implements IProblem
 		hash = hash * 31 + sourcePath.hashCode();
 		return hash;
 	}
+
+	public boolean isError()
+	{
+		return severity == IMarker.SEVERITY_ERROR;
+	}
+
+	public boolean isWarning()
+	{
+		return severity == IMarker.SEVERITY_WARNING;
+	}
+	
+	public boolean isTask()
+	{
+		// FIXME This is wrong! We can have "problems" that are info, and tasks are separate!
+		return severity == IMarker.SEVERITY_INFO;
+	}
 }

@@ -7,6 +7,8 @@
  */
 package com.aptana.editor.common.text.reconciler;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,7 @@ import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.reconciler.DirtyRegion;
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy;
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension;
+import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -30,9 +33,11 @@ import org.eclipse.ui.IPropertyListener;
 import com.aptana.buildpath.core.BuildPathCorePlugin;
 import com.aptana.core.build.IBuildParticipant;
 import com.aptana.core.build.IBuildParticipantManager;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.build.ReconcileContext;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.editor.common.AbstractThemeableEditor;
+import com.aptana.editor.common.CommonAnnotationModel;
 import com.aptana.editor.common.CommonEditorPlugin;
 import com.aptana.editor.common.parsing.FileService;
 
@@ -204,7 +209,7 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 			{
 				return;
 			}
-			fEditor.getFileService().validate();
+			// fEditor.getFileService().validate();
 			runParticipants();
 		}
 	}
@@ -235,10 +240,32 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 		reportProblems(context);
 	}
 
+	/**
+	 * Reports problems found in reconcile to the annotation model so we can draw them on the editor without creating
+	 * markers on the underlying resource.
+	 * 
+	 * @param context
+	 */
 	private void reportProblems(ReconcileContext context)
 	{
-		// TODO Generate annotations on file from problems stored on context! Much like how the folding annotations get
-		// updated! See CompilationUnitAnnotationModel in JDT UI.
+		IAnnotationModel model = fEditor.getDocumentProvider().getAnnotationModel(fEditor.getEditorInput());
+		if (model instanceof CommonAnnotationModel)
+		{
+			CommonAnnotationModel caModel = (CommonAnnotationModel) model;
+			caModel.setProgressMonitor(fMonitor);
+
+			// Collect all the problems into a single collection...
+			Map<String, Collection<IProblem>> mapProblems = context.getProblems();
+			Collection<IProblem> problems = new ArrayList<IProblem>();
+			for (Collection<IProblem> blah : mapProblems.values())
+			{
+				problems.addAll(blah);
+			}
+			// Now report them all to the annotation model!
+			caModel.reportProblems(problems);
+
+			caModel.setProgressMonitor(null);
+		}
 	}
 
 	private IFile getFile()

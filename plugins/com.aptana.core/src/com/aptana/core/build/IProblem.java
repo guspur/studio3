@@ -70,4 +70,10 @@ public interface IProblem
 	 * @return the attributes in a map
 	 */
 	Map<String, Object> createMarkerAttributes();
+
+	boolean isWarning();
+
+	boolean isError();
+
+	boolean isTask();
 }
