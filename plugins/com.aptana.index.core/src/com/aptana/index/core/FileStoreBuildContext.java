@@ -23,7 +23,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.core.runtime.content.IContentTypeManager;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.IOUtil;
 import com.aptana.index.core.build.BuildContext;
@@ -98,7 +98,7 @@ public class FileStoreBuildContext extends BuildContext
 	}
 
 	@Override
-	public void putProblems(String markerType, Collection<IValidationItem> problems)
+	public void putProblems(String markerType, Collection<IProblem> problems)
 	{
 		// ignore. Shouldn't be any markers generated on external resources, or during indexing
 	}

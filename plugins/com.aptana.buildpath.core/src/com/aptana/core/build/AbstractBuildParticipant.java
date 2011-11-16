@@ -67,10 +67,10 @@ public abstract class AbstractBuildParticipant implements IBuildParticipant
 	/**
 	 * Common code for detecting tasks in comment nodes from ASTs
 	 **/
-	protected Collection<IValidationItem> processCommentNode(String filePath, String source, int initialOffset,
+	protected Collection<IProblem> processCommentNode(String filePath, String source, int initialOffset,
 			IParseNode commentNode, String commentEnding)
 	{
-		Collection<IValidationItem> tasks = new ArrayList<IValidationItem>();
+		Collection<IProblem> tasks = new ArrayList<IProblem>();
 		String text = commentNode.getText();
 		if (text == null || text.length() == 0)
 		{

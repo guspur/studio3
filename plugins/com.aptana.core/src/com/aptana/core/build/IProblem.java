@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * @author Ingo Muschenetz
  */
-public interface IValidationItem
+public interface IProblem
 {
 
 	/**

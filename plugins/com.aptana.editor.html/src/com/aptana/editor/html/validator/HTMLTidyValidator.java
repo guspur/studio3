@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import org.eclipse.jface.text.Document;
 import org.w3c.tidy.Tidy;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.StringUtil;
 import com.aptana.editor.common.validator.IValidationManager;
@@ -48,9 +48,9 @@ public class HTMLTidyValidator implements IValidator
 	private static final String[] FILTERED = { "lacks \"type\" attribute", "lacks \"summary\" attribute",
 			"replacing illegal character code" };
 
-	public List<IValidationItem> validate(String source, URI path, IValidationManager manager)
+	public List<IProblem> validate(String source, URI path, IValidationManager manager)
 	{
-		List<IValidationItem> items = new ArrayList<IValidationItem>();
+		List<IProblem> items = new ArrayList<IProblem>();
 		manager.addParseErrors(items, IHTMLConstants.CONTENT_TYPE_HTML);
 		if (!StringUtil.isEmpty(source))
 		{
@@ -59,8 +59,8 @@ public class HTMLTidyValidator implements IValidator
 		return items;
 	}
 
-	private List<IValidationItem> runTidy(URI path, IValidationManager manager, final String source,
-			List<IValidationItem> items)
+	private List<IProblem> runTidy(URI path, IValidationManager manager, final String source,
+			List<IProblem> items)
 	{
 		final int numberOfLines = new Document(source).getNumberOfLines();
 
@@ -144,7 +144,7 @@ public class HTMLTidyValidator implements IValidator
 	// errors based on it's contents right now...
 	// Probably should return a collection of IValidationItems and then post-filter in caller!
 	private static void parseTidyOutput(String report, URI path, IValidationManager manager,
-			List<IValidationItem> items, int numberOfLines)
+			List<IProblem> items, int numberOfLines)
 	{
 		if (StringUtil.isEmpty(report) || !report.startsWith("line")) //$NON-NLS-1$
 		{

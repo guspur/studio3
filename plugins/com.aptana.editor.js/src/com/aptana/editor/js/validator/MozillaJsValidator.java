@@ -17,7 +17,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.Parser;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.editor.common.validator.IValidationManager;
 import com.aptana.editor.common.validator.IValidator;
 import com.aptana.editor.common.validator.ValidationManager;
@@ -26,9 +26,9 @@ import com.aptana.editor.js.IJSConstants;
 public class MozillaJsValidator implements IValidator
 {
 
-	public List<IValidationItem> validate(String source, URI path, IValidationManager manager)
+	public List<IProblem> validate(String source, URI path, IValidationManager manager)
 	{
-		List<IValidationItem> items = new ArrayList<IValidationItem>();
+		List<IProblem> items = new ArrayList<IProblem>();
 		manager.addParseErrors(items, IJSConstants.CONTENT_TYPE_JS);
 		Context cx = Context.enter();
 		DefaultErrorReporter reporter = new DefaultErrorReporter();

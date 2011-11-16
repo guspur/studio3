@@ -250,7 +250,7 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 	private void updateMarkers(BuildContext context, IProgressMonitor monitor)
 	{
 		final IFile file = context.getFile();
-		final Map<String, Collection<IValidationItem>> itemsByType = context.getProblems();
+		final Map<String, Collection<IProblem>> itemsByType = context.getProblems();
 		if (itemsByType == null || itemsByType.isEmpty())
 		{
 			return;
@@ -334,7 +334,7 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 		}
 	}
 
-	private synchronized void updateMarkers(IFile file, Map<String, Collection<IValidationItem>> itemsByType)
+	private synchronized void updateMarkers(IFile file, Map<String, Collection<IProblem>> itemsByType)
 	{
 		if (!file.exists())
 		{
@@ -347,7 +347,7 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 		{
 			try
 			{
-				Collection<IValidationItem> newItems = itemsByType.get(markerType);
+				Collection<IProblem> newItems = itemsByType.get(markerType);
 
 				// deletes the old markers
 				file.deleteMarkers(markerType, true, IResource.DEPTH_INFINITE);
@@ -365,9 +365,9 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 		}
 	}
 
-	private void addMarkers(Collection<IValidationItem> items, String markerType, IFile file) throws CoreException
+	private void addMarkers(Collection<IProblem> items, String markerType, IFile file) throws CoreException
 	{
-		for (IValidationItem item : items)
+		for (IProblem item : items)
 		{
 			IMarker marker = file.createMarker(markerType);
 			marker.setAttributes(item.createMarkerAttributes());

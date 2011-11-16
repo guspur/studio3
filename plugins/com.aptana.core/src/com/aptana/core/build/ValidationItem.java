@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IMarker;
 
-public class ValidationItem implements IValidationItem
+public class ValidationItem implements IProblem
 {
 
 	private final int severity;

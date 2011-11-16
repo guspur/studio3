@@ -10,7 +10,7 @@ import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.util.FileUtil;
 import com.aptana.core.util.IOUtil;
 import com.aptana.editor.css.contentassist.index.CSSFileIndexingParticipant;
@@ -79,7 +79,7 @@ public class HTMLFileIndexingParticipantTest extends TestCase
 			BuildContext context = new FileStoreBuildContext(fileStore)
 			{
 				@Override
-				public void putProblems(String markerType, Collection<IValidationItem> newItems)
+				public void putProblems(String markerType, Collection<IProblem> newItems)
 				{
 					problems.put(markerType, newItems);
 				}

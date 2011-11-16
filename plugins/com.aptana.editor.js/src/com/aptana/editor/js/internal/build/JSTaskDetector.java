@@ -18,7 +18,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.aptana.core.build.AbstractBuildParticipant;
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.editor.js.JSPlugin;
 import com.aptana.editor.js.parsing.ast.JSCommentNode;
@@ -36,7 +36,7 @@ public class JSTaskDetector extends AbstractBuildParticipant
 
 	public void buildFile(BuildContext context, IProgressMonitor monitor)
 	{
-		Collection<IValidationItem> tasks = detectTasks(context, monitor);
+		Collection<IProblem> tasks = detectTasks(context, monitor);
 		context.putProblems(IMarker.TASK, tasks);
 	}
 
@@ -45,7 +45,7 @@ public class JSTaskDetector extends AbstractBuildParticipant
 		context.removeProblems(IMarker.TASK);
 	}
 
-	private Collection<IValidationItem> detectTasks(BuildContext context, IProgressMonitor monitor)
+	private Collection<IProblem> detectTasks(BuildContext context, IProgressMonitor monitor)
 	{
 		try
 		{
@@ -58,10 +58,10 @@ public class JSTaskDetector extends AbstractBuildParticipant
 		return Collections.emptyList();
 	}
 
-	public Collection<IValidationItem> detectTasks(IParseRootNode rootNode, BuildContext context,
+	public Collection<IProblem> detectTasks(IParseRootNode rootNode, BuildContext context,
 			IProgressMonitor monitor)
 	{
-		Collection<IValidationItem> tasks = new ArrayList<IValidationItem>();
+		Collection<IProblem> tasks = new ArrayList<IProblem>();
 		try
 		{
 			IParseNode[] comments = rootNode.getCommentNodes();

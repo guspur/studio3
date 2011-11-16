@@ -18,7 +18,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.core.runtime.content.IContentTypeMatcher;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.util.IOUtil;
 import com.aptana.index.core.IndexPlugin;
 import com.aptana.parsing.ParseState;
@@ -34,14 +34,14 @@ public class BuildContext
 	private IFile file;
 	private IParseRootNode ast;
 
-	protected Map<String, Collection<IValidationItem>> problems;
+	protected Map<String, Collection<IProblem>> problems;
 
 	private List<IParseError> fErrors;
 
 	public BuildContext(IFile file)
 	{
 		this.file = file;
-		this.problems = new HashMap<String, Collection<IValidationItem>>();
+		this.problems = new HashMap<String, Collection<IProblem>>();
 	}
 
 	public IProject getProject()
@@ -127,12 +127,12 @@ public class BuildContext
 		this.problems.remove(markerType);
 	}
 
-	public void putProblems(String markerType, Collection<IValidationItem> problems)
+	public void putProblems(String markerType, Collection<IProblem> problems)
 	{
 		this.problems.put(markerType, problems);
 	}
 
-	public Map<String, Collection<IValidationItem>> getProblems()
+	public Map<String, Collection<IProblem>> getProblems()
 	{
 		return Collections.unmodifiableMap(problems);
 	}

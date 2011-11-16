@@ -20,7 +20,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.aptana.core.build.AbstractBuildParticipant;
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.editor.css.CSSPlugin;
 import com.aptana.editor.css.ICSSConstants;
@@ -46,7 +46,7 @@ public class HTMLTaskDetector extends AbstractBuildParticipant
 
 	public void buildFile(BuildContext context, IProgressMonitor monitor)
 	{
-		Collection<IValidationItem> tasks = detectTasks(context, monitor);
+		Collection<IProblem> tasks = detectTasks(context, monitor);
 		context.putProblems(IMarker.TASK, tasks);
 	}
 
@@ -55,9 +55,9 @@ public class HTMLTaskDetector extends AbstractBuildParticipant
 		context.removeProblems(IMarker.TASK);
 	}
 
-	private Collection<IValidationItem> detectTasks(BuildContext context, IProgressMonitor monitor)
+	private Collection<IProblem> detectTasks(BuildContext context, IProgressMonitor monitor)
 	{
-		Collection<IValidationItem> tasks = new ArrayList<IValidationItem>();
+		Collection<IProblem> tasks = new ArrayList<IProblem>();
 
 		SubMonitor sub = SubMonitor.convert(monitor, 2);
 		try
@@ -74,10 +74,10 @@ public class HTMLTaskDetector extends AbstractBuildParticipant
 		return tasks;
 	}
 
-	private Collection<IValidationItem> processComments(IParseRootNode rootNode, BuildContext context,
+	private Collection<IProblem> processComments(IParseRootNode rootNode, BuildContext context,
 			IProgressMonitor monitor)
 	{
-		Collection<IValidationItem> tasks = new ArrayList<IValidationItem>();
+		Collection<IProblem> tasks = new ArrayList<IProblem>();
 		IParseNode[] comments = rootNode.getCommentNodes();
 		if (comments == null || comments.length == 0)
 		{
@@ -112,9 +112,9 @@ public class HTMLTaskDetector extends AbstractBuildParticipant
 	 * @param file
 	 * @param htmlSpecialNode
 	 */
-	private Collection<IValidationItem> processHTMLSpecialNode(BuildContext context, HTMLSpecialNode htmlSpecialNode)
+	private Collection<IProblem> processHTMLSpecialNode(BuildContext context, HTMLSpecialNode htmlSpecialNode)
 	{
-		Collection<IValidationItem> tasks = new ArrayList<IValidationItem>();
+		Collection<IProblem> tasks = new ArrayList<IProblem>();
 		IParseNode child = htmlSpecialNode.getChild(0);
 
 		if (child != null)
@@ -149,10 +149,10 @@ public class HTMLTaskDetector extends AbstractBuildParticipant
 	 * @param parent
 	 * @param monitor
 	 */
-	private Collection<IValidationItem> walkAST(BuildContext context, IParseNode parent, IProgressMonitor monitor)
+	private Collection<IProblem> walkAST(BuildContext context, IParseNode parent, IProgressMonitor monitor)
 	{
 		// TODO Provide progress somehow?
-		Collection<IValidationItem> tasks = new ArrayList<IValidationItem>();
+		Collection<IProblem> tasks = new ArrayList<IProblem>();
 		if (parent != null)
 		{
 			Queue<IParseNode> queue = new LinkedList<IParseNode>();

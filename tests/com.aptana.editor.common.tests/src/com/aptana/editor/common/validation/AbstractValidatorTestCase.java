@@ -17,7 +17,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.text.Document;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.util.EclipseUtil;
 import com.aptana.editor.common.CommonEditorPlugin;
 import com.aptana.editor.common.parsing.FileService;
@@ -36,7 +36,7 @@ public class AbstractValidatorTestCase extends TestCase
 		store.putBoolean(getEnableParseErrorPrefKey(language), enabled);
 	}
 
-	protected List<IValidationItem> getParseErrors(String source, String language, IParseState ps) throws CoreException
+	protected List<IProblem> getParseErrors(String source, String language, IParseState ps) throws CoreException
 	{
 		TestProject project = new TestProject("Test", new String[] { "com.aptana.projects.webnature" });
 		IResource file = project.createFile("parseErrorTest", source);
@@ -48,7 +48,7 @@ public class AbstractValidatorTestCase extends TestCase
 		fileService.validate();
 
 		IValidationManager validationManager = fileService.getValidationManager();
-		List<IValidationItem> items = validationManager.getValidationItems();
+		List<IProblem> items = validationManager.getValidationItems();
 
 		project.delete();
 		return items;

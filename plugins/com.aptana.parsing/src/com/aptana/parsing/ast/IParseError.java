@@ -8,7 +8,7 @@
 package com.aptana.parsing.ast;
 
 /**
- * @author ayeung
+ * @author ayeung FIXME Combine with IProblem?
  */
 public interface IParseError // $codepro.audit.disable consistentSuffixUsage
 {

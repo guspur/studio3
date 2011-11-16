@@ -33,7 +33,7 @@ import org.w3c.css.properties.PropertiesLoader;
 import org.w3c.css.util.ApplContext;
 import org.w3c.css.util.Utf8Properties;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.URLEncoder;
 import com.aptana.editor.common.validator.IValidationManager;
@@ -86,9 +86,9 @@ public class CSSValidator implements IValidator
 		loadAptanaCSSProfile();
 	}
 
-	public List<IValidationItem> validate(String source, URI path, IValidationManager manager)
+	public List<IProblem> validate(String source, URI path, IValidationManager manager)
 	{
-		List<IValidationItem> items = new ArrayList<IValidationItem>();
+		List<IProblem> items = new ArrayList<IProblem>();
 		String report = getReport(source, path);
 		manager.addParseErrors(items, ICSSConstants.CONTENT_TYPE_CSS);
 		processErrorsInReport(report, path, manager, items);
@@ -97,7 +97,7 @@ public class CSSValidator implements IValidator
 	}
 
 	private void processErrorsInReport(String report, URI sourceUri, IValidationManager manager,
-			List<IValidationItem> items)
+			List<IProblem> items)
 	{
 		int offset = 0;
 		String elementName = "errorlist"; //$NON-NLS-1$
@@ -141,7 +141,7 @@ public class CSSValidator implements IValidator
 	}
 
 	private void processWarningsInReport(String report, URI sourceUri, IValidationManager manager,
-			List<IValidationItem> items)
+			List<IProblem> items)
 	{
 		int offset = 0;
 		String elementName = "warninglist"; //$NON-NLS-1$
@@ -243,7 +243,7 @@ public class CSSValidator implements IValidator
 	 *            the list that stores the added validation items
 	 */
 	private static void addErrors(String[] errors, URI sourcePath, IValidationManager manager,
-			List<IValidationItem> items)
+			List<IProblem> items)
 	{
 		Map<String, String> map;
 		for (String error : errors)
@@ -301,7 +301,7 @@ public class CSSValidator implements IValidator
 	 *            the list that stores the added validation items
 	 */
 	private static void addWarnings(String[] warnings, URI sourcePath, IValidationManager manager,
-			List<IValidationItem> items)
+			List<IProblem> items)
 	{
 		Map<String, String> map;
 		String last = ""; //$NON-NLS-1$

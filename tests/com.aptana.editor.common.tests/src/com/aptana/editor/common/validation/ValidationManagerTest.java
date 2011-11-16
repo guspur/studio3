@@ -15,7 +15,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.util.EclipseUtil;
 import com.aptana.core.util.StringUtil;
 import com.aptana.editor.common.CommonEditorPlugin;
@@ -84,7 +84,7 @@ public class ValidationManagerTest extends AbstractValidatorTestCase
 		fileService.validate();
 
 		IValidationManager validationManager = fileService.getValidationManager();
-		List<IValidationItem> items = validationManager.getValidationItems();
+		List<IProblem> items = validationManager.getValidationItems();
 
 		project.delete();
 
@@ -96,7 +96,7 @@ public class ValidationManagerTest extends AbstractValidatorTestCase
 		String text = "var foo = function() {\nhello()\n}";
 
 		setEnableParseError(false, JS_LANGUAGE);
-		List<IValidationItem> items = getParseErrors(text, JS_LANGUAGE, new ParseState());
+		List<IProblem> items = getParseErrors(text, JS_LANGUAGE, new ParseState());
 		assertEquals(0, items.size()); // Should be 0 since we don't have parse errors enabled
 	}
 
@@ -105,7 +105,7 @@ public class ValidationManagerTest extends AbstractValidatorTestCase
 		String text = "var foo = function() {\nhello()\n}";
 
 		setEnableParseError(true, JS_LANGUAGE);
-		List<IValidationItem> items = getParseErrors(text, JS_LANGUAGE, new ParseState());
+		List<IProblem> items = getParseErrors(text, JS_LANGUAGE, new ParseState());
 		assertFalse(ValidationManager.hasErrorOrWarningOnLine(items, 0));
 
 	}
@@ -115,7 +115,7 @@ public class ValidationManagerTest extends AbstractValidatorTestCase
 		String text = "var foo = function() {\nhello()\n}";
 
 		setEnableParseError(true, JS_LANGUAGE);
-		List<IValidationItem> items = getParseErrors(text, JS_LANGUAGE, new ParseState());
+		List<IProblem> items = getParseErrors(text, JS_LANGUAGE, new ParseState());
 		assertTrue(ValidationManager.hasErrorOrWarningOnLine(items, 3));
 	}
 

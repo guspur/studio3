@@ -31,7 +31,7 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.osgi.util.NLS;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.build.ValidationItem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.resources.IUniformResource;
@@ -57,7 +57,7 @@ public class ValidationManager implements IValidationManager
 	private IParseState fParseState;
 	// the nested languages that need to be validated as well
 	private Set<String> fNestedLanguages;
-	private Map<String, List<IValidationItem>> fExistingItemsByType;
+	private Map<String, List<IProblem>> fExistingItemsByType;
 
 	private IPropertyChangeListener fPropertyListener = new IPropertyChangeListener()
 	{
@@ -87,7 +87,7 @@ public class ValidationManager implements IValidationManager
 		fFileService = fileService;
 		fParseState = fileService.getParseState();
 		fNestedLanguages = new HashSet<String>();
-		fExistingItemsByType = new HashMap<String, List<IValidationItem>>();
+		fExistingItemsByType = new HashMap<String, List<IProblem>>();
 		CommonEditorPlugin.getDefault().getPreferenceStore().addPropertyChangeListener(fPropertyListener);
 	}
 
@@ -129,7 +129,7 @@ public class ValidationManager implements IValidationManager
 	{
 		fCurrentContentType = contentType;
 
-		Map<String, List<IValidationItem>> allItems = new HashMap<String, List<IValidationItem>>();
+		Map<String, List<IProblem>> allItems = new HashMap<String, List<IProblem>>();
 		List<ValidatorReference> validatorRefs = getValidatorRefs(contentType);
 		if (!validatorRefs.isEmpty())
 		{
@@ -139,13 +139,13 @@ public class ValidationManager implements IValidationManager
 				{
 					continue;
 				}
-				List<IValidationItem> newItems = validatorRef.getValidator().validate(source, fResourceUri, this);
+				List<IProblem> newItems = validatorRef.getValidator().validate(source, fResourceUri, this);
 
 				String type = validatorRef.getMarkerType();
-				List<IValidationItem> items = allItems.get(type);
+				List<IProblem> items = allItems.get(type);
 				if (items == null)
 				{
-					items = Collections.synchronizedList(new ArrayList<IValidationItem>());
+					items = Collections.synchronizedList(new ArrayList<IProblem>());
 					allItems.put(type, items);
 				}
 				items.addAll(newItems);
@@ -161,14 +161,14 @@ public class ValidationManager implements IValidationManager
 		update(allItems);
 	}
 
-	private void processNestedLanguage(String nestedLanguage, Map<String, List<IValidationItem>> itemsByType)
+	private void processNestedLanguage(String nestedLanguage, Map<String, List<IProblem>> itemsByType)
 	{
 		List<ValidatorReference> validatorRefs = getValidatorRefs(nestedLanguage);
 		for (ValidatorReference validatorRef : validatorRefs)
 		{
 			IValidator validator = validatorRef.getValidator();
 			IParseNode rootAST = fFileService.getParseResult();
-			List<IValidationItem> newItems = new ArrayList<IValidationItem>();
+			List<IProblem> newItems = new ArrayList<IProblem>();
 
 			if (rootAST == null)
 			{
@@ -178,10 +178,10 @@ public class ValidationManager implements IValidationManager
 			processASTForNestedLanguage(rootAST, nestedLanguage, validator, newItems);
 
 			String type = validatorRef.getMarkerType();
-			List<IValidationItem> items = itemsByType.get(type);
+			List<IProblem> items = itemsByType.get(type);
 			if (items == null)
 			{
-				items = Collections.synchronizedList(new ArrayList<IValidationItem>());
+				items = Collections.synchronizedList(new ArrayList<IProblem>());
 				itemsByType.put(type, items);
 			}
 			items.addAll(newItems);
@@ -189,7 +189,7 @@ public class ValidationManager implements IValidationManager
 	}
 
 	private void processASTForNestedLanguage(IParseNode node, String language, IValidator validator,
-			List<IValidationItem> items)
+			List<IProblem> items)
 	{
 		if (node == null)
 		{
@@ -206,9 +206,9 @@ public class ValidationManager implements IValidationManager
 					parseState.setEditState(source, null, 0, 0);
 					setParseState(parseState);
 					ParserPoolFactory.parse(language, parseState);
-					List<IValidationItem> newItems = validator.validate(source, fResourceUri, this);
+					List<IProblem> newItems = validator.validate(source, fResourceUri, this);
 					int lines = fDocument.getLineOfOffset(node.getStartingOffset());
-					for (IValidationItem item : newItems)
+					for (IProblem item : newItems)
 					{
 						((ValidationItem) item).setLineNumber(lines + item.getLineNumber());
 						((ValidationItem) item).setOffset(node.getStartingOffset() + item.getOffset());
@@ -231,12 +231,12 @@ public class ValidationManager implements IValidationManager
 		}
 	}
 
-	public IValidationItem createError(String message, int lineNumber, int lineOffset, int length, URI sourcePath)
+	public IProblem createError(String message, int lineNumber, int lineOffset, int length, URI sourcePath)
 	{
 		return addItem(IMarker.SEVERITY_ERROR, message, lineNumber, lineOffset, length, sourcePath);
 	}
 
-	public IValidationItem createWarning(String message, int lineNumber, int lineOffset, int length, URI sourcePath)
+	public IProblem createWarning(String message, int lineNumber, int lineOffset, int length, URI sourcePath)
 	{
 		return addItem(IMarker.SEVERITY_WARNING, message, lineNumber, lineOffset, length, sourcePath);
 	}
@@ -264,9 +264,9 @@ public class ValidationManager implements IValidationManager
 		return false;
 	}
 
-	public List<IValidationItem> getValidationItems()
+	public List<IProblem> getValidationItems()
 	{
-		List<IValidationItem> items = new ArrayList<IValidationItem>();
+		List<IProblem> items = new ArrayList<IProblem>();
 		Set<String> types = fExistingItemsByType.keySet();
 		for (String type : types)
 		{
@@ -275,7 +275,7 @@ public class ValidationManager implements IValidationManager
 		return items;
 	}
 
-	private IValidationItem addItem(int severity, String message, int lineNumber, int lineOffset, int length,
+	private IProblem addItem(int severity, String message, int lineNumber, int lineOffset, int length,
 			URI sourcePath)
 	{
 		int charLineOffset = 0;
@@ -293,7 +293,7 @@ public class ValidationManager implements IValidationManager
 		return new ValidationItem(severity, message, offset, length, lineNumber, sourcePath.toString());
 	}
 
-	private void update(final Map<String, List<IValidationItem>> itemsByType)
+	private void update(final Map<String, List<IProblem>> itemsByType)
 	{
 		// Performance fix: schedules the error handling as a single workspace update so that we don't trigger a
 		// bunch of resource updated events while problem markers are being added to the file.
@@ -318,7 +318,7 @@ public class ValidationManager implements IValidationManager
 		}
 	}
 
-	private synchronized void updateValidation(Map<String, List<IValidationItem>> itemsByType)
+	private synchronized void updateValidation(Map<String, List<IProblem>> itemsByType)
 	{
 		IResource workspaceResource = null;
 		IUniformResource externalResource = null;
@@ -346,13 +346,13 @@ public class ValidationManager implements IValidationManager
 		// checks each marker type that we had items for to see if we need to completely delete the markers of this type
 		// and re-add or if we need only to add the new items that didn't exist before
 		Set<String> markerTypes = fExistingItemsByType.keySet();
-		List<IValidationItem> oldItems, newItems;
+		List<IProblem> oldItems, newItems;
 		Set<String> markerTypesInNewOnly = new HashSet<String>(itemsByType.keySet());
 		for (String markerType : markerTypes)
 		{
 			oldItems = fExistingItemsByType.get(markerType);
 			newItems = itemsByType.get(markerType);
-			List<IValidationItem> itemsInNewOnly = new ArrayList<IValidationItem>();
+			List<IProblem> itemsInNewOnly = new ArrayList<IProblem>();
 			markerTypesInNewOnly.remove(markerType);
 
 			// checks if each item in the old list still exists in the new one; if so, we don't need to delete the old
@@ -365,7 +365,7 @@ public class ValidationManager implements IValidationManager
 			else
 			{
 				itemsInNewOnly.addAll(newItems);
-				for (IValidationItem item : oldItems)
+				for (IProblem item : oldItems)
 				{
 					if (newItems.contains(item))
 					{
@@ -426,10 +426,10 @@ public class ValidationManager implements IValidationManager
 		fExistingItemsByType = itemsByType;
 	}
 
-	private void addMarkers(List<IValidationItem> items, String markerType, boolean isExternal,
+	private void addMarkers(List<IProblem> items, String markerType, boolean isExternal,
 			IResource workspaceResource, IUniformResource externalResource) throws CoreException
 	{
-		for (IValidationItem item : items)
+		for (IProblem item : items)
 		{
 			IMarker marker;
 			if (isExternal)
@@ -513,7 +513,7 @@ public class ValidationManager implements IValidationManager
 		fParseState = parseState;
 	}
 
-	public void addParseErrors(List<IValidationItem> items, String language)
+	public void addParseErrors(List<IProblem> items, String language)
 	{
 
 		IParseState parseState = getParseState();
@@ -553,14 +553,14 @@ public class ValidationManager implements IValidationManager
 
 	}
 
-	public static boolean hasErrorOrWarningOnLine(List<IValidationItem> items, int line)
+	public static boolean hasErrorOrWarningOnLine(List<IProblem> items, int line)
 	{
 		if (items == null)
 		{
 			return false;
 		}
 
-		for (IValidationItem item : items)
+		for (IProblem item : items)
 		{
 			if (item.getLineNumber() == line)
 			{

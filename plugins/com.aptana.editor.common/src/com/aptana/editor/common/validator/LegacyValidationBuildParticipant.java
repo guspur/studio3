@@ -19,21 +19,28 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.osgi.util.NLS;
 
 import com.aptana.core.build.AbstractBuildParticipant;
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IBuildParticipant;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.build.ValidationItem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.StringUtil;
 import com.aptana.editor.common.CommonEditorPlugin;
 import com.aptana.editor.common.preferences.IPreferenceConstants;
 import com.aptana.index.core.build.BuildContext;
-import com.aptana.parsing.IParseState;
 import com.aptana.parsing.ast.IParseError;
 
+/**
+ * This hooks up the existing validators to the build/reconcile process through the {@link IBuildParticipant}
+ * infrastructure.
+ * 
+ * @author cwilliams
+ */
 public class LegacyValidationBuildParticipant extends AbstractBuildParticipant implements IValidationManager
 {
 
@@ -45,13 +52,12 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 		// no-op
 	}
 
-	private static List<ValidatorReference> getValidatorRefs(String contentType)
+	private List<ValidatorReference> getValidatorRefs(String contentType)
 	{
 		List<ValidatorReference> result = new ArrayList<ValidatorReference>();
 
 		List<ValidatorReference> validatorRefs = ValidatorLoader.getInstance().getValidators(contentType);
-		String list = CommonEditorPlugin.getDefault().getPreferenceStore()
-				.getString(getSelectedValidatorsPrefKey(contentType));
+		String list = getPreferenceStore().getString(getSelectedValidatorsPrefKey(contentType));
 		if (StringUtil.isEmpty(list))
 		{
 			// by default uses the first validator that supports the content type
@@ -78,17 +84,17 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 		return result;
 	}
 
-	private static String getSelectedValidatorsPrefKey(String language)
+	private String getSelectedValidatorsPrefKey(String language)
 	{
 		return MessageFormat.format("{0}:{1}", language, IPreferenceConstants.SELECTED_VALIDATORS); //$NON-NLS-1$
 	}
 
-	private static String getFilterExpressionsPrefKey(String language)
+	private String getFilterExpressionsPrefKey(String language)
 	{
 		return MessageFormat.format("{0}:{1}", language, IPreferenceConstants.FILTER_EXPRESSIONS); //$NON-NLS-1$
 	}
 
-	private static String getParseErrorEnabledPrefKey(String language)
+	private String getParseErrorEnabledPrefKey(String language)
 	{
 		return MessageFormat.format("{0}:{1}", language, IPreferenceConstants.PARSE_ERROR_ENABLED); //$NON-NLS-1$
 	}
@@ -98,7 +104,7 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 		try
 		{
 			fContext = context;
-			Map<String, List<IValidationItem>> allItems = new HashMap<String, List<IValidationItem>>();
+			Map<String, List<IProblem>> allItems = new HashMap<String, List<IProblem>>();
 			List<ValidatorReference> validatorRefs = getValidatorRefs(context.getContentType());
 			if (!validatorRefs.isEmpty())
 			{
@@ -106,13 +112,13 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 
 				for (ValidatorReference validatorRef : validatorRefs)
 				{
-					List<IValidationItem> newItems = validatorRef.getValidator().validate(context.getContents(),
+					List<IProblem> newItems = validatorRef.getValidator().validate(context.getContents(),
 							context.getURI(), this);
 					String type = validatorRef.getMarkerType();
-					List<IValidationItem> items = allItems.get(type);
+					List<IProblem> items = allItems.get(type);
 					if (items == null)
 					{
-						items = Collections.synchronizedList(new ArrayList<IValidationItem>());
+						items = Collections.synchronizedList(new ArrayList<IProblem>());
 						allItems.put(type, items);
 					}
 					items.addAll(newItems);
@@ -125,7 +131,7 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 				}
 
 				// Now stick the generated problems into the context
-				for (Map.Entry<String, List<IValidationItem>> entry : allItems.entrySet())
+				for (Map.Entry<String, List<IProblem>> entry : allItems.entrySet())
 				{
 					context.putProblems(entry.getKey(), entry.getValue());
 				}
@@ -133,30 +139,45 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 		}
 		catch (CoreException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			IdeLog.logError(CommonEditorPlugin.getDefault(), e);
 		}
-		fDocument = null;
-		fContext = null;
+		finally
+		{
+			fDocument = null;
+			fContext = null;
+		}
 	}
 
 	public void deleteFile(BuildContext context, IProgressMonitor monitor)
 	{
-		// TODO Auto-generated method stub
-
+		try
+		{
+			List<ValidatorReference> validatorRefs = getValidatorRefs(context.getContentType());
+			if (!validatorRefs.isEmpty())
+			{
+				for (ValidatorReference validatorRef : validatorRefs)
+				{
+					context.removeProblems(validatorRef.getMarkerType());
+				}
+			}
+		}
+		catch (CoreException e)
+		{
+			IdeLog.logError(CommonEditorPlugin.getDefault(), e);
+		}
 	}
 
-	public IValidationItem createError(String message, int lineNumber, int lineOffset, int length, URI sourcePath)
+	public IProblem createError(String message, int lineNumber, int lineOffset, int length, URI sourcePath)
 	{
-		return addItem(IMarker.SEVERITY_ERROR, message, lineNumber, lineOffset, length, sourcePath);
+		return createProblem(IMarker.SEVERITY_ERROR, message, lineNumber, lineOffset, length, sourcePath);
 	}
 
-	public IValidationItem createWarning(String message, int lineNumber, int lineOffset, int length, URI sourcePath)
+	public IProblem createWarning(String message, int lineNumber, int lineOffset, int length, URI sourcePath)
 	{
-		return addItem(IMarker.SEVERITY_WARNING, message, lineNumber, lineOffset, length, sourcePath);
+		return createProblem(IMarker.SEVERITY_WARNING, message, lineNumber, lineOffset, length, sourcePath);
 	}
 
-	private IValidationItem addItem(int severity, String message, int lineNumber, int lineOffset, int length,
+	private IProblem createProblem(int severity, String message, int lineNumber, int lineOffset, int length,
 			URI sourcePath)
 	{
 		int charLineOffset = 0;
@@ -168,6 +189,8 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 			}
 			catch (BadLocationException e)
 			{
+				IdeLog.logError(CommonEditorPlugin.getDefault(),
+						MessageFormat.format("Failed to determine offset of line {0}", lineNumber), e); //$NON-NLS-1$
 			}
 		}
 		int offset = charLineOffset + lineOffset;
@@ -182,8 +205,7 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 
 	public boolean isIgnored(String message, String language)
 	{
-		String list = CommonEditorPlugin.getDefault().getPreferenceStore()
-				.getString(getFilterExpressionsPrefKey(language));
+		String list = getPreferenceStore().getString(getFilterExpressionsPrefKey(language));
 		if (!StringUtil.isEmpty(list))
 		{
 			String[] expressions = list.split("####"); //$NON-NLS-1$
@@ -198,17 +220,9 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 		return false;
 	}
 
-	public IParseState getParseState()
+	public void addParseErrors(List<IProblem> items, String language)
 	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void addParseErrors(List<IValidationItem> items, String language)
-	{
-		if (fDocument == null
-				|| !CommonEditorPlugin.getDefault().getPreferenceStore()
-						.getBoolean(getParseErrorEnabledPrefKey(language)))
+		if (fDocument == null || !getPreferenceStore().getBoolean(getParseErrorEnabledPrefKey(language)))
 		{
 			return;
 		}
@@ -217,19 +231,11 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 		{
 			try
 			{
-				if (parseError.getSeverity() == IParseError.Severity.ERROR)
-				{
-					items.add(createError(parseError.getMessage(),
-							fDocument.getLineOfOffset(parseError.getOffset()) + 1, parseError.getOffset(), 0,
-							fContext.getURI()));
-				}
-				else
-				{
-					items.add(createWarning(parseError.getMessage(),
-							fDocument.getLineOfOffset(parseError.getOffset()) + 1, parseError.getOffset(), 0,
-							fContext.getURI()));
-				}
-
+				int severity = (parseError.getSeverity() == IParseError.Severity.ERROR) ? IMarker.SEVERITY_ERROR
+						: IMarker.SEVERITY_WARNING;
+				items.add(createProblem(severity, parseError.getMessage(),
+						fDocument.getLineOfOffset(parseError.getOffset()) + 1, parseError.getOffset(), 0,
+						fContext.getURI()));
 			}
 			catch (BadLocationException e)
 			{
@@ -237,13 +243,11 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 						NLS.bind("Error finding line on given offset : {0}", parseError.getOffset() + 1), e); //$NON-NLS-1$
 			}
 		}
-
 	}
 
-	public List<IValidationItem> getValidationItems()
+	protected IPreferenceStore getPreferenceStore()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return CommonEditorPlugin.getDefault().getPreferenceStore();
 	}
 
 }

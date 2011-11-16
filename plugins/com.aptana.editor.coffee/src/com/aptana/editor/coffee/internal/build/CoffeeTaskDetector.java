@@ -18,7 +18,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
 import com.aptana.core.build.AbstractBuildParticipant;
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.editor.coffee.CoffeeScriptEditorPlugin;
 import com.aptana.editor.coffee.parsing.ast.CoffeeCommentNode;
@@ -28,6 +28,10 @@ import com.aptana.parsing.ast.IParseRootNode;
 
 public class CoffeeTaskDetector extends AbstractBuildParticipant
 {
+	/**
+	 * Possible ending for coffeescript comments.
+	 */
+	private static final String COMMENT_ENDING = "###"; //$NON-NLS-1$
 
 	public void clean(IProject project, IProgressMonitor monitor)
 	{
@@ -36,7 +40,7 @@ public class CoffeeTaskDetector extends AbstractBuildParticipant
 
 	public void buildFile(BuildContext context, IProgressMonitor monitor)
 	{
-		Collection<IValidationItem> tasks = detectTasks(context, monitor);
+		Collection<IProblem> tasks = detectTasks(context, monitor);
 		context.putProblems(IMarker.TASK, tasks);
 	}
 
@@ -45,9 +49,9 @@ public class CoffeeTaskDetector extends AbstractBuildParticipant
 		context.removeProblems(IMarker.TASK);
 	}
 
-	private Collection<IValidationItem> detectTasks(BuildContext context, IProgressMonitor monitor)
+	private Collection<IProblem> detectTasks(BuildContext context, IProgressMonitor monitor)
 	{
-		Collection<IValidationItem> tasks = new ArrayList<IValidationItem>();
+		Collection<IProblem> tasks = new ArrayList<IProblem>();
 
 		try
 		{
@@ -65,7 +69,7 @@ public class CoffeeTaskDetector extends AbstractBuildParticipant
 			{
 				if (commentNode instanceof CoffeeCommentNode)
 				{
-					tasks.addAll(processCommentNode(filePath, source, 0, commentNode, "###")); //$NON-NLS-1$
+					tasks.addAll(processCommentNode(filePath, source, 0, commentNode, COMMENT_ENDING));
 				}
 				sub.worked(1);
 			}

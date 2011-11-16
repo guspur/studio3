@@ -12,7 +12,7 @@ import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.core.util.FileUtil;
 import com.aptana.core.util.IOUtil;
 import com.aptana.index.core.FileStoreBuildContext;
@@ -52,18 +52,18 @@ public class CoffeeTaskDetectorTest extends TestCase
 			BuildContext context = new FileStoreBuildContext(fileStore)
 			{
 				@Override
-				public void putProblems(String markerType, Collection<IValidationItem> newItems)
+				public void putProblems(String markerType, Collection<IProblem> newItems)
 				{
 					problems.put(markerType, newItems);
 				}
 			};
 			taskDetector.buildFile(context, new NullProgressMonitor());
 
-			Map<String, Collection<IValidationItem>> problems = context.getProblems();
+			Map<String, Collection<IProblem>> problems = context.getProblems();
 			assertTrue(problems.containsKey(IMarker.TASK));
-			Collection<IValidationItem> tasks = problems.get(IMarker.TASK);
+			Collection<IProblem> tasks = problems.get(IMarker.TASK);
 			assertEquals(1, tasks.size());
-			IValidationItem task = tasks.iterator().next();
+			IProblem task = tasks.iterator().next();
 			assertEquals("TODO This is a task", task.getMessage());
 			assertEquals(1, task.getLineNumber());
 			assertEquals(2, task.getOffset());
@@ -98,7 +98,7 @@ public class CoffeeTaskDetectorTest extends TestCase
 			BuildContext context = new FileStoreBuildContext(fileStore)
 			{
 				@Override
-				public void putProblems(String markerType, Collection<IValidationItem> newItems)
+				public void putProblems(String markerType, Collection<IProblem> newItems)
 				{
 					problems.put(markerType, newItems);
 				}
@@ -106,9 +106,9 @@ public class CoffeeTaskDetectorTest extends TestCase
 
 			taskDetector.buildFile(context, new NullProgressMonitor());
 			
-			Map<String, Collection<IValidationItem>> problems = context.getProblems();
+			Map<String, Collection<IProblem>> problems = context.getProblems();
 			assertTrue(problems.containsKey(IMarker.TASK));
-			Collection<IValidationItem> tasks = problems.get(IMarker.TASK);
+			Collection<IProblem> tasks = problems.get(IMarker.TASK);
 			assertEquals(0, tasks.size());
 		}
 		finally

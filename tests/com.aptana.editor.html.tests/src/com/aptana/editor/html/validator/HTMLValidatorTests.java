@@ -14,7 +14,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.text.Document;
 
-import com.aptana.core.build.IValidationItem;
+import com.aptana.core.build.IProblem;
 import com.aptana.editor.common.parsing.FileService;
 import com.aptana.editor.common.tests.util.TestProject;
 import com.aptana.editor.common.validation.AbstractValidatorTestCase;
@@ -33,9 +33,9 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		String text = "<html>\n<title>test</title>\n<body>\n<video />\n</body>\n</html>\n";
 
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 		assertEquals(1, items.size());
-		IValidationItem item = items.get(0);
+		IProblem item = items.get(0);
 
 		assertEquals("Error was not found on expected line", 4, item.getLineNumber());
 		assertEquals("Error message did not match expected error message",
@@ -47,15 +47,15 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		String text = "<html>\n<title>test\n<body>\n</body>\n</html>";
 
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 		assertEquals(2, items.size());
 		assertContains(items, "Missing end tag </title>");
 		assertContains(items, "missing </title> before <body>");
 	}
 
-	protected void assertContains(List<IValidationItem> items, String message)
+	protected void assertContains(List<IProblem> items, String message)
 	{
-		for (IValidationItem item : items)
+		for (IProblem item : items)
 		{
 			if (message.equals(item.getMessage()))
 			{
@@ -70,7 +70,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		String text = "<html>\n<title>test</title>\n<body>\n</body>\n</html>";
 
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 		assertEquals(0, items.size());
 	}
 
@@ -81,10 +81,10 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
 		setEnableParseError(true, ICSSConstants.CONTENT_TYPE_CSS);
 
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 
 		assertEquals(1, items.size());
-		IValidationItem item = items.get(0);
+		IProblem item = items.get(0);
 
 		assertEquals("Error was not found on expected line", 5, item.getLineNumber());
 		assertEquals("Error message did not match expected error message", "Syntax Error: unexpected token \":\"",
@@ -98,7 +98,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
 		setEnableParseError(true, ICSSConstants.CONTENT_TYPE_CSS);
 
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 
 		assertEquals("A validation error was found in valid html with embedded css", 0, items.size());
 	}
@@ -110,7 +110,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
 		setEnableParseError(true, IJSConstants.CONTENT_TYPE_JS);
 
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 
 		assertEquals("A validation error was found in valid html with embedded js", 0, items.size());
 	}
@@ -122,9 +122,9 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
 		setEnableParseError(true, IJSConstants.CONTENT_TYPE_JS);
 
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 		assertEquals(1, items.size());
-		IValidationItem item = items.get(0);
+		IProblem item = items.get(0);
 
 		assertEquals("Error was not found on expected line", 4, item.getLineNumber());
 		assertEquals("Error message did not match expected error message", "Syntax Error: unexpected token \"}\"",
@@ -135,7 +135,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "<script src=\"\"></script>";
 
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 		assertEquals(1, items.size());
 	}
 
@@ -143,7 +143,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "<header><h1></h1></header>";
 
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 		assertEquals(1, items.size());
 	}
 
@@ -151,12 +151,12 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "<nav></nav>";
 
-		List<IValidationItem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
 		assertEquals(1, items.size());
 	}
 
 	@Override
-	protected List<IValidationItem> getParseErrors(String source, String language, IParseState ps) throws CoreException
+	protected List<IProblem> getParseErrors(String source, String language, IParseState ps) throws CoreException
 	{
 		TestProject project = new TestProject("Test", new String[] { "com.aptana.projects.webnature" });
 		IResource file = project.createFile("parseErrorTest", source);
@@ -171,7 +171,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		fileService.parse(new NullProgressMonitor());
 		fileService.validate();
 
-		List<IValidationItem> items = validationManager.getValidationItems();
+		List<IProblem> items = validationManager.getValidationItems();
 
 		project.delete();
 		return items;
