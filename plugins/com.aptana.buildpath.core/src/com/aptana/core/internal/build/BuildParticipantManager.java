@@ -27,6 +27,7 @@ import com.aptana.buildpath.core.BuildPathCorePlugin;
 import com.aptana.core.build.IBuildParticipant;
 import com.aptana.core.build.IBuildParticipantManager;
 import com.aptana.core.logging.IdeLog;
+import com.aptana.core.util.CollectionsUtil;
 import com.aptana.core.util.EclipseUtil;
 import com.aptana.core.util.IConfigurationElementProcessor;
 import com.aptana.core.util.StringUtil;
@@ -174,7 +175,12 @@ public class BuildParticipantManager implements IBuildParticipantManager
 							}
 							map.put(element, types);
 						}
-					}, ELEMENT_PARTICIPANT);
+
+						public Set<String> getSupportElementNames()
+						{
+							return CollectionsUtil.newSet(ELEMENT_PARTICIPANT);
+						}
+					});
 
 			buildParticipants = map;
 		}

@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.content.IContentTypeManager;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 import com.aptana.core.logging.IdeLog;
+import com.aptana.core.util.CollectionsUtil;
 import com.aptana.core.util.EclipseUtil;
 import com.aptana.core.util.IConfigurationElementProcessor;
 
@@ -173,7 +174,13 @@ public class IndexManager
 						}
 						map.put(element, types);
 					}
-				}, TAG_FILE_INDEXING_PARTICIPANT);
+
+					@Override
+					public Set<String> getSupportElementNames()
+					{
+						return CollectionsUtil.newSet(TAG_FILE_INDEXING_PARTICIPANT);
+					}
+				});
 
 		return map;
 	}
