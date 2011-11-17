@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Position;
@@ -50,6 +52,20 @@ public class CommonAnnotationModel extends ResourceMarkerAnnotationModel
 		}
 
 		boolean temporaryProblemsChanged = false;
+
+		// Forcibly remove marker annotations now that we've reconciled...
+		try
+		{
+			IMarker[] markers = retrieveMarkers();
+			for (IMarker marker : markers)
+			{
+				removeMarkerAnnotation(marker);
+			}
+		}
+		catch (CoreException e)
+		{
+			// ignore
+		}
 
 		synchronized (getLockObject())
 		{
