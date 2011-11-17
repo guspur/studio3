@@ -22,7 +22,6 @@ import com.aptana.editor.common.CommonEditorPlugin;
 import com.aptana.editor.common.parsing.FileService;
 import com.aptana.editor.common.preferences.IPreferenceConstants;
 import com.aptana.editor.common.tests.util.TestProject;
-import com.aptana.editor.common.validator.IValidationManager;
 import com.aptana.editor.common.validator.ValidationManager;
 import com.aptana.editor.common.validator.ValidatorLanguage;
 import com.aptana.parsing.ParseState;
@@ -64,7 +63,7 @@ public class ValidationManagerTest extends AbstractValidatorTestCase
 	{
 		ParseState ps = new ParseState();
 		FileService fileService = new FileService(null, ps);
-		IValidationManager validationManager = fileService.getValidationManager();
+		ValidationManager validationManager = (ValidationManager) fileService.getValidationManager();
 		assertEquals(ps, validationManager.getParseState());
 	}
 
@@ -83,7 +82,7 @@ public class ValidationManagerTest extends AbstractValidatorTestCase
 		fileService.parse(new NullProgressMonitor());
 		fileService.validate();
 
-		IValidationManager validationManager = fileService.getValidationManager();
+		ValidationManager validationManager = (ValidationManager) fileService.getValidationManager();
 		List<IProblem> items = validationManager.getValidationItems();
 
 		project.delete();

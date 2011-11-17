@@ -18,7 +18,7 @@ import com.aptana.core.build.IProblem;
 import com.aptana.editor.common.parsing.FileService;
 import com.aptana.editor.common.tests.util.TestProject;
 import com.aptana.editor.common.validation.AbstractValidatorTestCase;
-import com.aptana.editor.common.validator.IValidationManager;
+import com.aptana.editor.common.validator.ValidationManager;
 import com.aptana.editor.css.ICSSConstants;
 import com.aptana.editor.html.IHTMLConstants;
 import com.aptana.editor.html.parsing.HTMLParseState;
@@ -162,7 +162,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		IResource file = project.createFile("parseErrorTest", source);
 
 		FileService fileService = new FileService(language, ps);
-		IValidationManager validationManager = fileService.getValidationManager();
+		ValidationManager validationManager = (ValidationManager) fileService.getValidationManager();
 		validationManager.addNestedLanguage(ICSSConstants.CONTENT_TYPE_CSS);
 		validationManager.addNestedLanguage(IJSConstants.CONTENT_TYPE_JS);
 
