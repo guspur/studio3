@@ -68,19 +68,18 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 	{
 		super.clean(monitor);
 
-		// List<IBuildParticipant> participants = getBuildParticipantManager().getBuildParticipants();
-		// SubMonitor sub = SubMonitor.convert(monitor, participants.size() + 1);
+		List<IBuildParticipant> participants = getBuildParticipantManager().getAllBuildParticipants();
+		SubMonitor sub = SubMonitor.convert(monitor, participants.size() + 1);
 
 		IProject project = getProject();
 		removeProblemsAndTasksFor(project);
-		// sub.worked(1);
 
 		// FIXME Should we visit all files and call "deleteFile" sort of like what we do with fullBuild?
-		// for (IBuildParticipant participant : participants)
-		// {
-		// participant.clean(project, sub.newChild(1));
-		// }
-		// sub.done();
+		for (IBuildParticipant participant : participants)
+		{
+			participant.clean(project, sub.newChild(1));
+		}
+		sub.done();
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -89,6 +88,11 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 	{
 		String projectName = getProject().getName();
 		long startTime = System.nanoTime();
+
+		SubMonitor sub = SubMonitor.convert(monitor, 100);
+
+		List<IBuildParticipant> participants = getBuildParticipantManager().getAllBuildParticipants();
+		buildStarting(participants, kind, sub.newChild(10));
 
 		if (kind == IncrementalProjectBuilder.FULL_BUILD)
 		{
@@ -102,7 +106,7 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 				);
 				// @formatter:on
 			}
-			fullBuild(monitor);
+			fullBuild(sub.newChild(80));
 		}
 		else
 		{
@@ -116,7 +120,7 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 					IDebugScopes.BUILDER
 				);
 				// @formatter:on
-				fullBuild(monitor);
+				fullBuild(sub.newChild(80));
 			}
 			else
 			{
@@ -127,9 +131,11 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 					IDebugScopes.BUILDER
 				);
 				// @formatter:on
-				incrementalBuild(delta, monitor);
+				incrementalBuild(delta, sub.newChild(80));
 			}
 		}
+
+		buildEnding(participants, sub.newChild(10));
 
 		double endTime = ((double) System.nanoTime() - startTime) / 1000000;
 		// @formatter:off
@@ -143,6 +149,34 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 		return null;
 	}
 
+	private void buildEnding(List<IBuildParticipant> participants, IProgressMonitor monitor)
+	{
+		if (participants == null)
+		{
+			return;
+		}
+		SubMonitor sub = SubMonitor.convert(monitor, participants.size());
+		for (IBuildParticipant participant : participants)
+		{
+			participant.buildEnding(sub.newChild(1));
+		}
+		sub.done();
+	}
+
+	protected void buildStarting(List<IBuildParticipant> participants, int kind, IProgressMonitor monitor)
+	{
+		if (participants == null)
+		{
+			return;
+		}
+		SubMonitor sub = SubMonitor.convert(monitor, participants.size());
+		for (IBuildParticipant participant : participants)
+		{
+			participant.buildStarting(getProject(), kind, sub.newChild(1));
+		}
+		sub.done();
+	}
+
 	private void incrementalBuild(IResourceDelta delta, IProgressMonitor monitor)
 	{
 		try
@@ -152,10 +186,10 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 			delta.accept(collector);
 
 			// Notify of the removed files
-			removeFiles(collector.filesToRemoveFromIndex, sub.newChild(25));
+			removeFiles(collector.removedFiles, sub.newChild(25));
 
 			// Now build the new/updated files
-			buildFiles(collector.filesToIndex, sub.newChild(75));
+			buildFiles(collector.updatedFiles, sub.newChild(75));
 		}
 		catch (CoreException e)
 		{
@@ -203,8 +237,15 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 		return BuildPathCorePlugin.getDefault().getBuildParticipantManager();
 	}
 
+	/**
+	 * For a full build, we grab all files inside the project and then call build on each file.
+	 * 
+	 * @param monitor
+	 * @throws CoreException
+	 */
 	private void fullBuild(IProgressMonitor monitor) throws CoreException
 	{
+		// TODO Do we need to basically perform a clean first?
 		CollectingResourceVisitor visitor = new CollectingResourceVisitor();
 		getProject().accept(visitor);
 		buildFiles(visitor.files, monitor);
@@ -217,15 +258,17 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 			return;
 		}
 
-		SubMonitor sub = SubMonitor.convert(monitor, 16 * files.size());
+		SubMonitor sub = SubMonitor.convert(monitor, 15 * files.size());
 		for (IFile file : files)
 		{
 			BuildContext context = new BuildContext(file);
 			sub.worked(1);
+
 			List<IBuildParticipant> participants = getBuildParticipantManager().getBuildParticipants(
 					context.getContentType());
-			sub.worked(5);
-			buildFile(context, participants, sub.newChild(10));
+			sub.worked(2);
+
+			buildFile(context, participants, sub.newChild(12));
 		}
 		sub.done();
 	}
@@ -262,7 +305,7 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 
 			public void run(IProgressMonitor monitor)
 			{
-				updateMarkers(file, itemsByType);
+				updateMarkers(file, itemsByType, monitor);
 			}
 		};
 
@@ -272,10 +315,14 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 		}
 		catch (CoreException e)
 		{
-			IdeLog.logError(BuildPathCorePlugin.getDefault(), "Error updating markers", e);
+			IdeLog.logError(BuildPathCorePlugin.getDefault(), "Error updating markers", e); //$NON-NLS-1$
 		}
 	}
 
+	/**
+	 * @param resource
+	 * @return
+	 */
 	private static ISchedulingRule getMarkerRule(Object resource)
 	{
 		if (resource instanceof IResource)
@@ -285,8 +332,57 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 		return null;
 	}
 
+	private synchronized void updateMarkers(IFile file, Map<String, Collection<IProblem>> itemsByType,
+			IProgressMonitor monitor)
+	{
+		if (!file.exists())
+		{
+			// no need to update the marker when the resource no longer exists
+			return;
+		}
+		SubMonitor sub = SubMonitor.convert(monitor, itemsByType.size() * 10);
+
+		// FIXME Do a diff like we do in ValidationManager!
+		for (String markerType : itemsByType.keySet())
+		{
+			try
+			{
+				Collection<IProblem> newItems = itemsByType.get(markerType);
+				// deletes the old markers
+				file.deleteMarkers(markerType, true, IResource.DEPTH_INFINITE);
+				sub.worked(1);
+
+				// adds the new ones
+				addMarkers(newItems, markerType, file, sub.newChild(9));
+			}
+			catch (CoreException e)
+			{
+				IdeLog.logError(BuildPathCorePlugin.getDefault(), e);
+			}
+		}
+		sub.done();
+	}
+
+	private void addMarkers(Collection<IProblem> items, String markerType, IFile file, IProgressMonitor monitor)
+			throws CoreException
+	{
+		if (items == null)
+		{
+			return;
+		}
+		SubMonitor sub = SubMonitor.convert(monitor, items.size() * 2);
+		for (IProblem item : items)
+		{
+			IMarker marker = file.createMarker(markerType);
+			sub.worked(1);
+			marker.setAttributes(item.createMarkerAttributes());
+			sub.worked(1);
+		}
+		sub.done();
+	}
+
 	/**
-	 * Collects all files with infinite depth.
+	 * Collects all files with infinite depth. Used to grab all files inside an {@link IProject} for full builds.
 	 * 
 	 * @author cwilliams
 	 */
@@ -310,10 +406,16 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 		}
 	}
 
+	/**
+	 * Converts an {@link IResourceDelta} into two {@link Set}s: files that have been added/updated, and files that have
+	 * been removed/deleted.
+	 * 
+	 * @author cwilliams
+	 */
 	private static class ResourceCollector implements IResourceDeltaVisitor
 	{
-		Set<IFile> filesToIndex = new HashSet<IFile>();
-		Set<IFile> filesToRemoveFromIndex = new HashSet<IFile>();
+		Set<IFile> updatedFiles = new HashSet<IFile>();
+		Set<IFile> removedFiles = new HashSet<IFile>();
 
 		public boolean visit(IResourceDelta delta) throws CoreException
 		{
@@ -323,54 +425,14 @@ public class UnifiedBuilder extends IncrementalProjectBuilder
 				if (delta.getKind() == IResourceDelta.ADDED
 						|| (delta.getKind() == IResourceDelta.CHANGED && ((delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.ENCODING)) != 0)))
 				{
-					filesToIndex.add((IFile) resource);
+					updatedFiles.add((IFile) resource);
 				}
 				else if (delta.getKind() == IResourceDelta.REMOVED)
 				{
-					filesToRemoveFromIndex.add((IFile) resource);
+					removedFiles.add((IFile) resource);
 				}
 			}
 			return true;
-		}
-	}
-
-	private synchronized void updateMarkers(IFile file, Map<String, Collection<IProblem>> itemsByType)
-	{
-		if (!file.exists())
-		{
-			// no need to update the marker when the resource no longer exists
-			return;
-		}
-
-		// FIXME Do a diff like we do in ValidationManager!
-		for (String markerType : itemsByType.keySet())
-		{
-			try
-			{
-				Collection<IProblem> newItems = itemsByType.get(markerType);
-
-				// deletes the old markers
-				file.deleteMarkers(markerType, true, IResource.DEPTH_INFINITE);
-
-				// adds the new ones
-				if (newItems != null)
-				{
-					addMarkers(newItems, markerType, file);
-				}
-			}
-			catch (CoreException e)
-			{
-				IdeLog.logError(BuildPathCorePlugin.getDefault(), e);
-			}
-		}
-	}
-
-	private void addMarkers(Collection<IProblem> items, String markerType, IFile file) throws CoreException
-	{
-		for (IProblem item : items)
-		{
-			IMarker marker = file.createMarker(markerType);
-			marker.setAttributes(item.createMarkerAttributes());
 		}
 	}
 }

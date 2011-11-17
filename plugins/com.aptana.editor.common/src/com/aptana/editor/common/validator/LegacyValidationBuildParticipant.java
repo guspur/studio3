@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -46,11 +45,6 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 
 	private Document fDocument;
 	private BuildContext fContext;
-
-	public void clean(IProject project, IProgressMonitor monitor)
-	{
-		// no-op
-	}
 
 	private List<ValidatorReference> getValidatorRefs(String contentType)
 	{

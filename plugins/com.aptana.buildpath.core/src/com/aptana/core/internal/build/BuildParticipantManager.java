@@ -51,12 +51,48 @@ public class BuildParticipantManager implements IBuildParticipantManager
 	{
 	}
 
-	/**
-	 * Returns an ordered list of the file indexing participants registered for the given filename's associated content
-	 * types.
-	 * 
-	 * @param filename
-	 * @return
+	/*
+	 * (non-Javadoc)
+	 * @see com.aptana.core.build.IBuildParticipantManager#getAllBuildParticipants()
+	 */
+	public List<IBuildParticipant> getAllBuildParticipants()
+	{
+		Set<IBuildParticipant> participants = new HashSet<IBuildParticipant>();
+		Map<IConfigurationElement, Set<IContentType>> participantstoContentTypes = getBuildParticipants();
+		for (Map.Entry<IConfigurationElement, Set<IContentType>> entry : participantstoContentTypes.entrySet())
+		{
+			try
+			{
+				IBuildParticipant participant = createParticipant(entry.getKey());
+				if (participant != null)
+				{
+					participants.add(participant);
+				}
+			}
+			catch (CoreException e)
+			{
+				IdeLog.logError(BuildPathCorePlugin.getDefault(),
+						MessageFormat.format("Unable to generate instance of build participant: {0}", //$NON-NLS-1$
+								entry.getKey().getAttribute(ATTR_CLASS)), e);
+			}
+		}
+
+		List<IBuildParticipant> result = new ArrayList<IBuildParticipant>(participants);
+		Collections.sort(result, new Comparator<IBuildParticipant>()
+		{
+			public int compare(IBuildParticipant arg0, IBuildParticipant arg1)
+			{
+				// sort higher first
+				return arg1.getPriority() - arg0.getPriority();
+			}
+		});
+
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.aptana.core.build.IBuildParticipantManager#getBuildParticipants(java.lang.String)
 	 */
 	public List<IBuildParticipant> getBuildParticipants(String contentTypeId)
 	{

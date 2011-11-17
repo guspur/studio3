@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
 
 import com.aptana.core.resources.TaskTag;
 import com.aptana.core.util.StringUtil;
@@ -37,6 +39,21 @@ public abstract class AbstractBuildParticipant implements IBuildParticipant
 	public void setPriority(int priority)
 	{
 		this.priority = priority;
+	}
+
+	public void buildStarting(IProject project, int kind, IProgressMonitor monitor)
+	{
+		// no-op. Most impls won't do project level setup.
+	}
+
+	public void buildEnding(IProgressMonitor monitor)
+	{
+		// no-op. Most impls won't do project level setup.
+	}
+
+	public void clean(IProject project, IProgressMonitor monitor)
+	{
+		// no-op. Most impls won't do batch clean stuff
 	}
 
 	protected int getLineNumber(int start, String source)

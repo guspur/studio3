@@ -28,6 +28,8 @@ import com.aptana.index.core.build.BuildContext;
 public class IndexBuildParticipant extends AbstractBuildParticipant
 {
 
+	private Index fIndex;
+
 	public void clean(IProject project, IProgressMonitor monitor)
 	{
 		URI uri = getURI(project);
@@ -42,17 +44,35 @@ public class IndexBuildParticipant extends AbstractBuildParticipant
 		}
 	}
 
+	public void buildStarting(IProject project, int kind, IProgressMonitor monitor)
+	{
+		fIndex = getIndex(project);
+	}
+
+	protected Index getIndex(IProject project)
+	{
+		return IndexManager.getInstance().getIndex(getURI(project));
+	}
+
+	public void buildEnding(IProgressMonitor monitor)
+	{
+		fIndex = null;
+	}
+
 	public void buildFile(BuildContext context, IProgressMonitor monitor)
 	{
-		IProject project = context.getProject();
-		Index index = IndexManager.getInstance().getIndex(getURI(project));
+		if (fIndex == null)
+		{
+			fIndex = getIndex(context.getProject());
+		}
+
 		List<IFileStoreIndexingParticipant> indexers = IndexManager.getInstance().getIndexParticipants(
 				context.getName());
 		for (IFileStoreIndexingParticipant indexer : indexers)
 		{
 			try
 			{
-				indexer.index(context, index, monitor);
+				indexer.index(context, fIndex, monitor);
 			}
 			catch (CoreException e)
 			{
@@ -63,9 +83,7 @@ public class IndexBuildParticipant extends AbstractBuildParticipant
 
 	public void deleteFile(BuildContext context, IProgressMonitor monitor)
 	{
-		IProject project = context.getProject();
-		Index index = IndexManager.getInstance().getIndex(getURI(project));
-		index.remove(context.getURI());
+		fIndex.remove(context.getURI());
 	}
 
 	private static URI getURI(IProject project)

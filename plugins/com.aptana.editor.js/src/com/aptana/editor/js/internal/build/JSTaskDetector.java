@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -28,11 +27,6 @@ import com.aptana.parsing.ast.IParseRootNode;
 
 public class JSTaskDetector extends AbstractBuildParticipant
 {
-
-	public void clean(IProject project, IProgressMonitor monitor)
-	{
-		// TODO Auto-generated method stub
-	}
 
 	public void buildFile(BuildContext context, IProgressMonitor monitor)
 	{
@@ -58,8 +52,7 @@ public class JSTaskDetector extends AbstractBuildParticipant
 		return Collections.emptyList();
 	}
 
-	public Collection<IProblem> detectTasks(IParseRootNode rootNode, BuildContext context,
-			IProgressMonitor monitor)
+	public Collection<IProblem> detectTasks(IParseRootNode rootNode, BuildContext context, IProgressMonitor monitor)
 	{
 		Collection<IProblem> tasks = new ArrayList<IProblem>();
 		try

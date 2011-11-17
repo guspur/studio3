@@ -39,11 +39,6 @@ public class HTMLTaskDetector extends AbstractBuildParticipant
 	private static final String ELEMENT_SCRIPT = "script"; //$NON-NLS-1$
 	private static final String ATTRIBUTE_SRC = "src"; //$NON-NLS-1$
 
-	public void clean(IProject project, IProgressMonitor monitor)
-	{
-		// TODO Auto-generated method stub
-	}
-
 	public void buildFile(BuildContext context, IProgressMonitor monitor)
 	{
 		Collection<IProblem> tasks = detectTasks(context, monitor);
@@ -74,8 +69,7 @@ public class HTMLTaskDetector extends AbstractBuildParticipant
 		return tasks;
 	}
 
-	private Collection<IProblem> processComments(IParseRootNode rootNode, BuildContext context,
-			IProgressMonitor monitor)
+	private Collection<IProblem> processComments(IParseRootNode rootNode, BuildContext context, IProgressMonitor monitor)
 	{
 		Collection<IProblem> tasks = new ArrayList<IProblem>();
 		IParseNode[] comments = rootNode.getCommentNodes();

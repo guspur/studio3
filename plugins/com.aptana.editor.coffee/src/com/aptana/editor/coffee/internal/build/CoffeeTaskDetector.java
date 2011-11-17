@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -32,11 +31,6 @@ public class CoffeeTaskDetector extends AbstractBuildParticipant
 	 * Possible ending for coffeescript comments.
 	 */
 	private static final String COMMENT_ENDING = "###"; //$NON-NLS-1$
-
-	public void clean(IProject project, IProgressMonitor monitor)
-	{
-		// TODO Auto-generated method stub
-	}
 
 	public void buildFile(BuildContext context, IProgressMonitor monitor)
 	{
