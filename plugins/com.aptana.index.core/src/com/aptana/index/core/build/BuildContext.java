@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.content.IContentTypeMatcher;
 import com.aptana.core.build.IProblem;
 import com.aptana.core.util.IOUtil;
 import com.aptana.index.core.IndexPlugin;
+import com.aptana.parsing.IParseState;
 import com.aptana.parsing.ParseState;
 import com.aptana.parsing.ParserPoolFactory;
 import com.aptana.parsing.ast.IParseError;
@@ -33,15 +34,14 @@ public class BuildContext
 
 	private IFile file;
 	private IParseRootNode ast;
-
 	protected Map<String, Collection<IProblem>> problems;
-
 	private List<IParseError> fErrors;
 
 	public BuildContext(IFile file)
 	{
 		this.file = file;
 		this.problems = new HashMap<String, Collection<IProblem>>();
+		this.fErrors = Collections.emptyList();
 	}
 
 	public IProject getProject()
@@ -61,10 +61,14 @@ public class BuildContext
 
 	public synchronized IParseRootNode getAST() throws CoreException
 	{
+		return getAST(new ParseState());
+	}
+
+	public synchronized IParseRootNode getAST(IParseState parseState) throws CoreException
+	{
 		if (ast == null)
 		{
 			// FIXME What if we fail to parse? Should we catch and log that exception here and return null?
-			ParseState parseState = new ParseState();
 			try
 			{
 				parseState.setEditState(getContents(), null, 0, 0);
@@ -87,6 +91,7 @@ public class BuildContext
 	public synchronized void resetAST()
 	{
 		ast = null;
+		fErrors = Collections.emptyList();
 	}
 
 	public String getContents() throws CoreException
