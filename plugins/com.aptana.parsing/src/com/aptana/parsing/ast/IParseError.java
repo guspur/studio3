@@ -37,6 +37,13 @@ public interface IParseError // $codepro.audit.disable consistentSuffixUsage
 	public int getOffset();
 
 	/**
+	 * The length of the error
+	 * 
+	 * @return the length of the error
+	 */
+	public int getLength();
+
+	/**
 	 * The message for the parse error
 	 * 
 	 * @return the error message

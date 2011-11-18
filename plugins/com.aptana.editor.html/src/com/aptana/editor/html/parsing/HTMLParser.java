@@ -215,7 +215,7 @@ public class HTMLParser implements IParser
 		parseAttribute(element, fCurrentSymbol);
 		if (element.isSelfClosing() && !HTMLParseState.isEndForbiddenOrEmptyTag(element.getName()))
 		{
-			fParseState.addError(new ParseError(element.getStartingOffset(),
+			fParseState.addError(new ParseError(element.getStartingOffset(), element.getLength(),
 					Messages.HTMLParser_self_closing_syntax_on_non_void_element_error, IParseError.Severity.ERROR));
 		}
 		return element;
@@ -378,7 +378,7 @@ public class HTMLParser implements IParser
 			}
 			else
 			{
-				fParseState.addError(new ParseError(fCurrentSymbol.getStart(), Messages.HTMLParser_unexpected_error
+				fParseState.addError(new ParseError(fCurrentSymbol, Messages.HTMLParser_unexpected_error
 						+ fCurrentSymbol.value, IParseError.Severity.WARNING));
 			}
 		}
@@ -409,7 +409,7 @@ public class HTMLParser implements IParser
 	{
 		if (fParseState.getCloseTagType(node.getName()) != IHTMLTagInfo.END_OPTIONAL)
 		{
-			fParseState.addError(new ParseError(node.getEndingOffset(), MessageFormat.format(
+			fParseState.addError(new ParseError(node.getStartingOffset(), node.getLength(), MessageFormat.format(
 					Messages.HTMLParser_missing_end_tag_error, node.getName()), IParseError.Severity.WARNING));
 		}
 	}
