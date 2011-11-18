@@ -5,7 +5,6 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -33,15 +32,14 @@ public class BuildContext
 	public static final IContentType[] NO_CONTENT_TYPES = new IContentType[0];
 
 	private IFile file;
-	private IParseRootNode ast;
 	protected Map<String, Collection<IProblem>> problems;
-	private List<IParseError> fErrors;
+	private IParseState fParseState;
 
 	public BuildContext(IFile file)
 	{
 		this.file = file;
 		this.problems = new HashMap<String, Collection<IProblem>>();
-		this.fErrors = Collections.emptyList();
+		this.fParseState = null;
 	}
 
 	public IProject getProject()
@@ -66,13 +64,30 @@ public class BuildContext
 
 	public synchronized IParseRootNode getAST(IParseState parseState) throws CoreException
 	{
-		if (ast == null)
+		boolean reparse = false;
+		if (fParseState == null)
+		{
+			reparse = true;
+			fParseState = parseState;
+		}
+		else
+		{
+			// TODO Check equality of the parse states to see if anything has changed (and therefore we need to
+			// re-parse)?
+		}
+
+		if (reparse)
 		{
 			// FIXME What if we fail to parse? Should we catch and log that exception here and return null?
 			try
 			{
-				parseState.setEditState(getContents(), null, 0, 0);
-				ast = ParserPoolFactory.parse(getContentType(), parseState);
+				fParseState.setEditState(getContents(), null, 0, 0);
+				// FIXME The parsers need to throw a specific SyntaxException or something for us to differentiate
+				// between those and IO errors!
+				IParseRootNode ast = ParserPoolFactory.parse(getContentType(), parseState);
+				fParseState.setParseResult(ast);
+
+				// TODO Turn fParseState.getErrors() into IProblems on this context?
 			}
 			catch (CoreException e)
 			{
@@ -82,16 +97,22 @@ public class BuildContext
 			{
 				throw new CoreException(new Status(IStatus.ERROR, IndexPlugin.PLUGIN_ID, e.getMessage(), e));
 			}
-			// FIXME instead of holding onto this, why not stick the errors into the problems map ourselves?
-			fErrors = parseState.getErrors();
+			finally
+			{
+				// Wipe the source out of the parse state to clean up RAM?
+				fParseState.setEditState(null, null, 0, 0);
+			}
 		}
-		return ast;
+		if (fParseState == null)
+		{
+			return null;
+		}
+		return fParseState.getParseResult();
 	}
 
 	public synchronized void resetAST()
 	{
-		ast = null;
-		fErrors = Collections.emptyList();
+		fParseState = null;
 	}
 
 	public String getContents() throws CoreException
@@ -144,7 +165,7 @@ public class BuildContext
 
 	public Collection<IParseError> getParseErrors()
 	{
-		return Collections.unmodifiableCollection(fErrors);
+		return Collections.unmodifiableCollection(fParseState.getErrors());
 	}
 
 	public InputStream openInputStream(IProgressMonitor monitor) throws CoreException
