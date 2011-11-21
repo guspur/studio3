@@ -131,7 +131,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		assertEquals(1, items.size());
 		IProblem item = items.get(0);
 
-		assertEquals("Error was not found on expected line", 4, item.getLineNumber());
+		assertEquals("Error was not found on expected line", 5, item.getLineNumber());
 		assertEquals("Error message did not match expected error message", "Syntax Error: unexpected token \"}\"",
 				item.getMessage());
 	}

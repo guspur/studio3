@@ -36,6 +36,7 @@ import com.aptana.editor.html.parsing.lexer.HTMLTokens;
 import com.aptana.editor.js.IJSConstants;
 import com.aptana.parsing.IParseState;
 import com.aptana.parsing.IParser;
+import com.aptana.parsing.ParseState;
 import com.aptana.parsing.ParserPoolFactory;
 import com.aptana.parsing.ast.IParseError;
 import com.aptana.parsing.ast.IParseNode;
@@ -291,7 +292,19 @@ public class HTMLParser implements IParser
 			try
 			{
 				String text = fScanner.getSource().get(start, end - start + 1);
-				IParseNode node = ParserPoolFactory.parse(language, text);
+				ParseState subParseState = new ParseState();
+				subParseState.setEditState(text, null, 0, 0);
+				IParseNode node = ParserPoolFactory.parse(language, subParseState);
+				List<IParseError> subErrors = subParseState.getErrors();
+				if (subErrors != null)
+				{
+					for (IParseError subError : subErrors)
+					{
+						// Shift the line/offsets based on the starting offset/line of the sub-language!
+						fParseState.addError(new ParseError(start + subError.getOffset(), subError.getLength(),
+								subError.getMessage(), subError.getSeverity()));
+					}
+				}
 				if (node == null)
 				{
 					node = new HTMLTextNode(text, start, end);
