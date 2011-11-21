@@ -25,6 +25,11 @@ import com.aptana.index.core.build.BuildContext;
 import com.aptana.parsing.ast.IParseNode;
 import com.aptana.parsing.ast.IParseRootNode;
 
+/**
+ * Detects task tags in CSS comments.
+ * 
+ * @author cwilliams
+ */
 public class CSSTaskDetector extends AbstractBuildParticipant
 {
 	public void buildFile(BuildContext context, IProgressMonitor monitor)
@@ -51,6 +56,10 @@ public class CSSTaskDetector extends AbstractBuildParticipant
 		return Collections.emptyList();
 	}
 
+	/**
+	 * Method for detecting tasks in the root of a CSS AST. This is public for the HTML task detector to be able to
+	 * delegate to this for CSS as a sub-language.
+	 */
 	public Collection<IProblem> detectTasks(IParseRootNode rootNode, BuildContext context, IProgressMonitor monitor)
 	{
 		Collection<IProblem> tasks = new ArrayList<IProblem>();

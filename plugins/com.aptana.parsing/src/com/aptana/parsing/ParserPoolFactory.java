@@ -217,6 +217,8 @@ public class ParserPoolFactory
 			return null;
 		}
 
+		// TODO We should keep some sort of LRU cache here based on last source hash, content type and parse state!
+
 		IParserPool pool = getInstance().getParserPool(contentTypeId);
 		IParseRootNode result = null;
 

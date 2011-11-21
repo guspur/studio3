@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IMarker;
 
-public class ValidationItem implements IProblem
+public class Problem implements IProblem
 {
 
 	private final int severity;
@@ -23,12 +23,12 @@ public class ValidationItem implements IProblem
 	private final String sourcePath;
 	private int priority;
 
-	public ValidationItem(int severity, String message, int offset, int length, int lineNumber, String sourcePath)
+	public Problem(int severity, String message, int offset, int length, int lineNumber, String sourcePath)
 	{
 		this(severity, message, offset, length, lineNumber, sourcePath, IMarker.PRIORITY_NORMAL);
 	}
 
-	public ValidationItem(int severity, String message, int offset, int length, int lineNumber, String sourcePath,
+	public Problem(int severity, String message, int offset, int length, int lineNumber, String sourcePath,
 			int priority)
 	{
 		this.severity = severity;
@@ -104,11 +104,11 @@ public class ValidationItem implements IProblem
 	@Override
 	public boolean equals(Object obj)
 	{
-		if (!(obj instanceof ValidationItem))
+		if (!(obj instanceof Problem))
 		{
 			return false;
 		}
-		ValidationItem other = (ValidationItem) obj;
+		Problem other = (Problem) obj;
 		return severity == other.severity && offset == other.offset && length == other.length
 				&& message.equals(other.message) && sourcePath.equals(other.sourcePath);
 	}

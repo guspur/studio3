@@ -9,6 +9,7 @@ package com.aptana.core.build;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 
 import org.eclipse.core.resources.IMarker;
@@ -135,9 +136,38 @@ public abstract class AbstractBuildParticipant implements IBuildParticipant
 		return new String(source.substring(commentNode.getStartingOffset(), commentNode.getEndingOffset() + 1));
 	}
 
-	protected ValidationItem createTask(String sourcePath, String message, Integer priority, int lineNumber,
-			int offset, int endOffset)
+	protected IProblem createTask(String sourcePath, String message, Integer priority, int lineNumber, int offset,
+			int endOffset)
 	{
-		return new ValidationItem(IMarker.SEVERITY_INFO, message, offset, endOffset - offset, lineNumber, sourcePath);
+		return new Problem(IMarker.SEVERITY_INFO, message, offset, endOffset - offset, lineNumber, sourcePath);
+	}
+
+	// Stuff from Validation...
+	protected IProblem createWarning(String message, int lineNumber, int i, int j, String sourcePath)
+	{
+		return new Problem(IMarker.SEVERITY_WARNING, message, i, j, lineNumber, sourcePath);
+	}
+
+	protected IProblem createError(String message, int lineNumber, int i, int j, String sourcePath)
+	{
+		return new Problem(IMarker.SEVERITY_ERROR, message, i, j, lineNumber, sourcePath);
+	}
+
+	protected boolean hasErrorOrWarningOnLine(List<IProblem> items, int line)
+	{
+		if (items == null)
+		{
+			return false;
+		}
+
+		for (IProblem item : items)
+		{
+			if (item.getLineNumber() == line)
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

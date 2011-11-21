@@ -12,20 +12,32 @@ import java.util.List;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 
+import com.aptana.core.build.AbstractBuildParticipant;
 import com.aptana.core.build.IProblem;
 import com.aptana.editor.common.validation.AbstractValidatorTestCase;
 import com.aptana.editor.css.ICSSConstants;
-import com.aptana.parsing.ParseState;
 
 public class CSSValidatorTests extends AbstractValidatorTestCase
 {
+
+	@Override
+	protected AbstractBuildParticipant createValidator()
+	{
+		return new CSSValidator();
+	}
+
+	@Override
+	protected String getFileExtension()
+	{
+		return "css";
+	}
 
 	public void testCSSParseErrors() throws CoreException
 	{
 		String text = "div#paginator {\nfloat: left\nwidth: 65px\n}";
 
 		setEnableParseError(true, ICSSConstants.CONTENT_TYPE_CSS);
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(1, items.size());
 
 		IProblem item = items.get(0);
@@ -40,7 +52,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 		String text = "div#paginator {\nfloat: left;\nwidth: 65px\n}";
 
 		setEnableParseError(true, ICSSConstants.CONTENT_TYPE_CSS);
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -48,7 +60,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "div {\ntransition: width 2s;\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -56,7 +68,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "div {\n-background-color: #123;\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -64,7 +76,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "H1:before {\ncontent: none;\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -72,7 +84,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "div {\nresize: both;\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -80,7 +92,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "div {\nbackground-clip: border-box;\nbackground-origin: content-box;\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -88,7 +100,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "@font-face {\nsrc: url(\"\");\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(1, items.size());
 
 		// makes sure it's just a warning unrelated to the src
@@ -100,7 +112,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "@namespace \"\";";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -108,7 +120,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "@media only screen and (max-width: 600px) {\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -116,7 +128,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "div {\nbackground-color: rgba(255, 255, 255, 0.5);\ncolor: rgba(255, 255, 255, 0.5);\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -124,7 +136,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "div {\nbox-sizing: border-box;\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -132,7 +144,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "div {\noutline-offset: 10px;\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -140,7 +152,7 @@ public class CSSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "div {\ntransform: scale(0.5) rotate(90deg) translate(10px, 10px) skew(45deg, 60deg);\n}";
 
-		List<IProblem> items = getParseErrors(text, ICSSConstants.CONTENT_TYPE_CSS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 }

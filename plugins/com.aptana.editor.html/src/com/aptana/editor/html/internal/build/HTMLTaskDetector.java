@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -33,6 +32,12 @@ import com.aptana.index.core.build.BuildContext;
 import com.aptana.parsing.ast.IParseNode;
 import com.aptana.parsing.ast.IParseRootNode;
 
+/**
+ * Detects task tags in HTML comments. Also traverses into JS and CSS and delegates detecting tasks in those
+ * sub-languages to the {@link JSTaskDetector} and {@link CSSTaskDetector}
+ * 
+ * @author cwilliams
+ */
 public class HTMLTaskDetector extends AbstractBuildParticipant
 {
 

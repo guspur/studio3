@@ -26,7 +26,7 @@ import org.eclipse.osgi.util.NLS;
 import com.aptana.core.build.AbstractBuildParticipant;
 import com.aptana.core.build.IBuildParticipant;
 import com.aptana.core.build.IProblem;
-import com.aptana.core.build.ValidationItem;
+import com.aptana.core.build.Problem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.StringUtil;
 import com.aptana.editor.common.CommonEditorPlugin;
@@ -188,7 +188,7 @@ public class LegacyValidationBuildParticipant extends AbstractBuildParticipant i
 			}
 		}
 		int offset = charLineOffset + lineOffset;
-		return new ValidationItem(severity, message, offset, length, lineNumber, sourcePath.toString());
+		return new Problem(severity, message, offset, length, lineNumber, sourcePath.toString());
 	}
 
 	public void addNestedLanguage(String language)

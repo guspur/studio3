@@ -9,31 +9,36 @@ package com.aptana.editor.html.validator;
 
 import java.util.List;
 
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jface.text.Document;
 
+import com.aptana.core.build.AbstractBuildParticipant;
 import com.aptana.core.build.IProblem;
-import com.aptana.editor.common.parsing.FileService;
-import com.aptana.editor.common.tests.util.TestProject;
 import com.aptana.editor.common.validation.AbstractValidatorTestCase;
-import com.aptana.editor.common.validator.ValidationManager;
 import com.aptana.editor.css.ICSSConstants;
 import com.aptana.editor.html.IHTMLConstants;
 import com.aptana.editor.html.parsing.HTMLParseState;
 import com.aptana.editor.js.IJSConstants;
-import com.aptana.parsing.IParseState;
 
 public class HTMLValidatorTests extends AbstractValidatorTestCase
 {
+	@Override
+	protected AbstractBuildParticipant createValidator()
+	{
+		return new HTMLTidyValidator();
+	}
+
+	@Override
+	protected String getFileExtension()
+	{
+		return "html";
+	}
 
 	public void testHTMLSelfClosingTagOnNonVoidElement() throws CoreException
 	{
 		String text = "<html>\n<title>test</title>\n<body>\n<video />\n</body>\n</html>\n";
 
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(1, items.size());
 		IProblem item = items.get(0);
 
@@ -47,7 +52,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		String text = "<html>\n<title>test\n<body>\n</body>\n</html>";
 
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(2, items.size());
 		assertContains(items, "Missing end tag </title>");
 		assertContains(items, "missing </title> before <body>");
@@ -70,7 +75,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		String text = "<html>\n<title>test</title>\n<body>\n</body>\n</html>";
 
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -81,7 +86,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
 		setEnableParseError(true, ICSSConstants.CONTENT_TYPE_CSS);
 
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 
 		assertEquals(1, items.size());
 		IProblem item = items.get(0);
@@ -98,7 +103,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
 		setEnableParseError(true, ICSSConstants.CONTENT_TYPE_CSS);
 
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 
 		assertEquals("A validation error was found in valid html with embedded css", 0, items.size());
 	}
@@ -110,7 +115,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
 		setEnableParseError(true, IJSConstants.CONTENT_TYPE_JS);
 
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 
 		assertEquals("A validation error was found in valid html with embedded js", 0, items.size());
 	}
@@ -122,7 +127,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 		setEnableParseError(true, IHTMLConstants.CONTENT_TYPE_HTML);
 		setEnableParseError(true, IJSConstants.CONTENT_TYPE_JS);
 
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(1, items.size());
 		IProblem item = items.get(0);
 
@@ -135,7 +140,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "<script src=\"\"></script>";
 
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(1, items.size());
 	}
 
@@ -143,7 +148,7 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "<header><h1></h1></header>";
 
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(1, items.size());
 	}
 
@@ -151,29 +156,13 @@ public class HTMLValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "<nav></nav>";
 
-		List<IProblem> items = getParseErrors(text, IHTMLConstants.CONTENT_TYPE_HTML, new HTMLParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(1, items.size());
 	}
 
 	@Override
-	protected List<IProblem> getParseErrors(String source, String language, IParseState ps) throws CoreException
+	protected List<IProblem> getParseErrors(String source) throws CoreException
 	{
-		TestProject project = new TestProject("Test", new String[] { "com.aptana.projects.webnature" });
-		IResource file = project.createFile("parseErrorTest", source);
-
-		FileService fileService = new FileService(language, ps);
-		ValidationManager validationManager = (ValidationManager) fileService.getValidationManager();
-		validationManager.addNestedLanguage(ICSSConstants.CONTENT_TYPE_CSS);
-		validationManager.addNestedLanguage(IJSConstants.CONTENT_TYPE_JS);
-
-		fileService.setDocument(new Document(source));
-		fileService.setResource(file);
-		fileService.parse(new NullProgressMonitor());
-		fileService.validate();
-
-		List<IProblem> items = validationManager.getValidationItems();
-
-		project.delete();
-		return items;
+		return super.getParseErrors(source, new HTMLParseState(), IHTMLConstants.HTML_PROBLEM);
 	}
 }

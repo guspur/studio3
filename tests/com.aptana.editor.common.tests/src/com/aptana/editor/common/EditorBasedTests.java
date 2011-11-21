@@ -231,7 +231,7 @@ public abstract class EditorBasedTests extends TestCase
 	protected abstract String getPluginId();
 
 	/**
-	 * Is we wish to index our files, the index we should use
+	 * Is we wish to index our files, the indexer we should use
 	 * 
 	 * @return
 	 */
@@ -292,21 +292,7 @@ public abstract class EditorBasedTests extends TestCase
 		this.fileUri = store.toURI();
 		this.editor = this.createEditor(editorInput);
 		this.document = editor.getDocumentProvider().getDocument(editor.getEditorInput());
-		this.source = document.get();
-
-		IFileStoreIndexingParticipant indexer = this.createIndexer();
-		if (indexer != null)
-		{
-			BuildContext context = new FileStoreBuildContext(store);
-			try
-			{
-				indexer.index(context, this.getIndex(), new NullProgressMonitor());
-			}
-			catch (CoreException e)
-			{
-				fail("Error indexing file: " + e.getMessage());
-			}
-		}
+		this.source = document.get();		
 
 		// find offsets
 		this.cursorOffsets = new ArrayList<Integer>();
@@ -331,6 +317,27 @@ public abstract class EditorBasedTests extends TestCase
 
 			// update document
 			document.set(this.source);
+		}
+		
+		IFileStoreIndexingParticipant indexer = this.createIndexer();
+		if (indexer != null)
+		{
+			BuildContext context = new FileStoreBuildContext(store)
+			{
+				@Override
+				public synchronized String getContents() throws CoreException
+				{
+					return source;
+				}
+			};
+			try
+			{
+				indexer.index(context, this.getIndex(), new NullProgressMonitor());
+			}
+			catch (CoreException e)
+			{
+				fail("Error indexing file: " + e.getMessage());
+			}
 		}
 	}
 

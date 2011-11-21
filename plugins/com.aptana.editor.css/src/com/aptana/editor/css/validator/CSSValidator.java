@@ -38,13 +38,12 @@ import org.w3c.css.util.Utf8Properties;
 
 import com.aptana.core.build.AbstractBuildParticipant;
 import com.aptana.core.build.IProblem;
-import com.aptana.core.build.ValidationItem;
+import com.aptana.core.build.Problem;
 import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.StringUtil;
 import com.aptana.core.util.URLEncoder;
 import com.aptana.editor.common.CommonEditorPlugin;
 import com.aptana.editor.common.preferences.IPreferenceConstants;
-import com.aptana.editor.common.validator.ValidationManager;
 import com.aptana.editor.css.CSSPlugin;
 import com.aptana.editor.css.ICSSConstants;
 import com.aptana.index.core.build.BuildContext;
@@ -240,7 +239,7 @@ public class CSSValidator extends AbstractBuildParticipant
 	 * @param items
 	 *            the list that stores the added validation items
 	 */
-	private static void addErrors(String[] errors, String sourcePath, List<IProblem> items)
+	private void addErrors(String[] errors, String sourcePath, List<IProblem> items)
 	{
 		Map<String, String> map;
 		for (String error : errors)
@@ -255,7 +254,7 @@ public class CSSValidator extends AbstractBuildParticipant
 			String errorsubtype = map.get("errorsubtype"); //$NON-NLS-1$
 
 			// Don't attempt to add errors if there are already errors on this line
-			if (ValidationManager.hasErrorOrWarningOnLine(items, lineNumber))
+			if (hasErrorOrWarningOnLine(items, lineNumber))
 			{
 				continue;
 			}
@@ -285,7 +284,7 @@ public class CSSValidator extends AbstractBuildParticipant
 		}
 	}
 
-	public static boolean isIgnored(String message, String language)
+	private static boolean isIgnored(String message, String language)
 	{
 		String list = CommonEditorPlugin.getDefault().getPreferenceStore()
 				.getString(getFilterExpressionsPrefKey(language));
@@ -308,11 +307,6 @@ public class CSSValidator extends AbstractBuildParticipant
 		return language + ":" + IPreferenceConstants.FILTER_EXPRESSIONS; //$NON-NLS-1$
 	}
 
-	private static IProblem createError(String message, int lineNumber, int i, int j, String sourcePath)
-	{
-		return new ValidationItem(IMarker.SEVERITY_ERROR, message, i, j, lineNumber, sourcePath);
-	}
-
 	/**
 	 * Adds the CSS warnings.
 	 * 
@@ -323,7 +317,7 @@ public class CSSValidator extends AbstractBuildParticipant
 	 * @param items
 	 *            the list that stores the added validation items
 	 */
-	private static void addWarnings(String[] warnings, String sourcePath, List<IProblem> items)
+	private void addWarnings(String[] warnings, String sourcePath, List<IProblem> items)
 	{
 		Map<String, String> map;
 		String last = ""; //$NON-NLS-1$
@@ -337,7 +331,7 @@ public class CSSValidator extends AbstractBuildParticipant
 			String context = map.get("context"); //$NON-NLS-1$
 
 			// Don't attempt to add warnings if there are already errors on this line
-			if (ValidationManager.hasErrorOrWarningOnLine(items, lineNumber))
+			if (hasErrorOrWarningOnLine(items, lineNumber))
 			{
 				continue;
 			}
@@ -351,11 +345,6 @@ public class CSSValidator extends AbstractBuildParticipant
 
 			last = hash;
 		}
-	}
-
-	private static IProblem createWarning(String message, int lineNumber, int i, int j, String sourcePath)
-	{
-		return new ValidationItem(IMarker.SEVERITY_WARNING, message, i, j, lineNumber, sourcePath);
 	}
 
 	/**
@@ -483,6 +472,8 @@ public class CSSValidator extends AbstractBuildParticipant
 			String source = context.getContents();
 			URI uri = context.getURI();
 			String path = uri.toString();
+			
+			context.getAST(); // make sure a parse has happened...
 
 			List<IProblem> problems = new ArrayList<IProblem>();
 			// Add parse errors...
@@ -495,7 +486,7 @@ public class CSSValidator extends AbstractBuildParticipant
 				{
 					line = getLineNumber(parseError.getOffset(), source);
 				}
-				problems.add(new ValidationItem(severity, parseError.getMessage(), parseError.getOffset(), parseError
+				problems.add(new Problem(severity, parseError.getMessage(), parseError.getOffset(), parseError
 						.getLength(), line, path));
 			}
 

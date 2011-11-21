@@ -33,7 +33,6 @@ import com.aptana.editor.common.contentassist.CommonCompletionProposal;
 import com.aptana.editor.common.contentassist.ILexemeProvider;
 import com.aptana.editor.common.contentassist.UserAgentManager;
 import com.aptana.editor.common.outline.IParseListener;
-import com.aptana.editor.js.IJSConstants;
 import com.aptana.editor.js.JSLanguageConstants;
 import com.aptana.editor.js.JSPlugin;
 import com.aptana.editor.js.JSSourceConfiguration;
@@ -56,7 +55,6 @@ import com.aptana.editor.js.parsing.ast.JSObjectNode;
 import com.aptana.editor.js.parsing.lexer.JSTokenType;
 import com.aptana.index.core.Index;
 import com.aptana.parsing.IParseState;
-import com.aptana.parsing.ParserPoolFactory;
 import com.aptana.parsing.ast.IParseNode;
 import com.aptana.parsing.lexer.IRange;
 import com.aptana.parsing.lexer.Lexeme;
@@ -533,16 +531,10 @@ public class JSContentAssistProcessor extends CommonContentAssistProcessor
 	 */
 	IParseNode getActiveASTNode(int offset)
 	{
-		JSParseState jsParseState = new JSParseState();
-		// turn off all comment processing
-		jsParseState.setAttachComments(false);
-		jsParseState.setCollectComments(false);
-
-		// (possibly) force a parse
 		IParseNode result = null;
 		try
 		{
-			IParseNode ast = ParserPoolFactory.parse(IJSConstants.CONTENT_TYPE_JS, jsParseState);
+			IParseNode ast = editor.getAST();
 			if (ast != null)
 			{
 				result = ast.getNodeAtOffset(offset);

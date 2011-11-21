@@ -35,6 +35,8 @@ public class BuildContext
 	protected Map<String, Collection<IProblem>> problems;
 	private IParseState fParseState;
 
+	private String fContents;
+
 	public BuildContext(IFile file)
 	{
 		this.file = file;
@@ -115,10 +117,13 @@ public class BuildContext
 		fParseState = null;
 	}
 
-	public String getContents() throws CoreException
+	public synchronized String getContents() throws CoreException
 	{
-		// FIXME Cache this!
-		return IOUtil.read(openInputStream(new NullProgressMonitor()), getCharset());
+		if (fContents == null)
+		{
+			fContents = IOUtil.read(openInputStream(new NullProgressMonitor()), getCharset());
+		}
+		return fContents;
 	}
 
 	protected String getCharset() throws CoreException
@@ -155,6 +160,7 @@ public class BuildContext
 
 	public void putProblems(String markerType, Collection<IProblem> problems)
 	{
+		// TODO Maybe just add problems?
 		this.problems.put(markerType, problems);
 	}
 
@@ -165,6 +171,8 @@ public class BuildContext
 
 	public Collection<IParseError> getParseErrors()
 	{
+		// FIXME Maybe we should force getAST() if fParseState == null?
+		
 		return Collections.unmodifiableCollection(fParseState.getErrors());
 	}
 

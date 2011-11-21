@@ -13,23 +13,40 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 
+import com.aptana.core.build.AbstractBuildParticipant;
 import com.aptana.core.build.IProblem;
 import com.aptana.core.util.EclipseUtil;
 import com.aptana.editor.common.CommonEditorPlugin;
 import com.aptana.editor.common.preferences.IPreferenceConstants;
 import com.aptana.editor.common.validation.AbstractValidatorTestCase;
 import com.aptana.editor.js.IJSConstants;
-import com.aptana.parsing.ParseState;
+import com.aptana.editor.js.parsing.JSParseState;
 
 public class JSValidatorTests extends AbstractValidatorTestCase
 {
+
+	@Override
+	protected AbstractBuildParticipant createValidator()
+	{
+		return new JSLintValidator();
+	}
+
+	@Override
+	protected String getFileExtension()
+	{
+		return "js";
+	}
 
 	public void testJSParseErrors() throws CoreException
 	{
 		String text = "var foo = function() {\nhello()\n};";
 
 		setEnableParseError(true, IJSConstants.CONTENT_TYPE_JS);
-		List<IProblem> items = getParseErrors(text, IJSConstants.CONTENT_TYPE_JS, new ParseState());
+		// Turn off JSLint
+		IEclipsePreferences prefs = EclipseUtil.instanceScope().getNode(CommonEditorPlugin.PLUGIN_ID);
+		prefs.put(IJSConstants.CONTENT_TYPE_JS + ":" + IPreferenceConstants.SELECTED_VALIDATORS, "");
+
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(1, items.size());
 		IProblem item = items.get(0);
 
@@ -38,12 +55,17 @@ public class JSValidatorTests extends AbstractValidatorTestCase
 				item.getMessage());
 	}
 
+	protected List<IProblem> getParseErrors(String source) throws CoreException
+	{
+		return getParseErrors(source, new JSParseState(), IJSConstants.JS_PROBLEM_MARKER_TYPE);
+	}
+
 	public void testNoJSParseErrors() throws CoreException
 	{
 		String text = "var foo = function() {\nhello();\n};";
 
 		setEnableParseError(true, IJSConstants.CONTENT_TYPE_JS);
-		List<IProblem> items = getParseErrors(text, IJSConstants.CONTENT_TYPE_JS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(0, items.size());
 	}
 
@@ -51,11 +73,12 @@ public class JSValidatorTests extends AbstractValidatorTestCase
 	{
 		String text = "var foo = function() {\nhello();\n};";
 
+		// Turn on JSLint
 		IEclipsePreferences prefs = EclipseUtil.instanceScope().getNode(CommonEditorPlugin.PLUGIN_ID);
 		prefs.put(IJSConstants.CONTENT_TYPE_JS + ":" + IPreferenceConstants.SELECTED_VALIDATORS,
 				"JSLint JavaScript Validator");
 
-		List<IProblem> items = getParseErrors(text, IJSConstants.CONTENT_TYPE_JS, new ParseState());
+		List<IProblem> items = getParseErrors(text);
 		assertEquals(1, items.size());
 
 		IProblem item = items.get(0);
@@ -63,6 +86,5 @@ public class JSValidatorTests extends AbstractValidatorTestCase
 		assertEquals("'hello' is not defined.", item.getMessage());
 		assertEquals(IMarker.SEVERITY_WARNING, item.getSeverity());
 		assertEquals(24, item.getOffset());
-		assertTrue(item.getSourcePath().endsWith("/parseErrorTest"));
 	}
 }

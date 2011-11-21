@@ -90,22 +90,6 @@
    <extension
          point="com.aptana.editor.common.validator">
       <content-type
-            name="%validator.language.js.name"
-            id="com.aptana.contenttype.js">
-      </content-type>
-      <validator
-            class="com.aptana.editor.js.validator.MozillaJsValidator"
-            content-type="com.aptana.contenttype.js"
-            marker-type="com.aptana.editor.js.problem"
-            name="%validator.mozilla.name">
-      </validator>
-      <validator
-            class="com.aptana.editor.js.validator.JSLintValidator"
-            content-type="com.aptana.contenttype.js"
-            marker-type="com.aptana.editor.js.problem"
-            name="%validator.jslint.name">
-      </validator>
-      <content-type
             id="com.aptana.contenttype.sdocml"
             name="%sdocml.content.name">
       </content-type>
@@ -231,6 +215,23 @@
          point="com.aptana.buildpath.core.buildParticipants">
       <participant
             class="com.aptana.editor.js.internal.build.JSTaskDetector"
+            name="JS Task Detector"
+            priority="50">
+         <contentTypeBinding
+               contentTypeId="com.aptana.contenttype.js">
+         </contentTypeBinding>
+      </participant>
+      <participant
+            class="com.aptana.editor.js.validator.JSLintValidator"
+            name="%validator.jslint.name"
+            priority="50">
+         <contentTypeBinding
+               contentTypeId="com.aptana.contenttype.js">
+         </contentTypeBinding>
+      </participant>
+      <participant
+            class="com.aptana.editor.js.validator.MozillaJsValidator"
+            name="%validator.mozilla.name"
             priority="50">
          <contentTypeBinding
                contentTypeId="com.aptana.contenttype.js">

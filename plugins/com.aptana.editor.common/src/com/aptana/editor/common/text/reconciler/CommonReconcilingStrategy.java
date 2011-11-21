@@ -205,6 +205,7 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 	private void reconcile(boolean initialReconcile, boolean force)
 	{
 		// Refresh the outline...
+		// TODO Does this need to be run in asyncExec here?
 		Display.getDefault().asyncExec(new Runnable()
 		{
 			public void run()

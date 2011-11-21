@@ -92,7 +92,6 @@ import com.aptana.editor.common.internal.peer.CharacterPairMatcher;
 import com.aptana.editor.common.internal.peer.PeerCharacterCloser;
 import com.aptana.editor.common.internal.scripting.CommandElementsProvider;
 import com.aptana.editor.common.outline.CommonOutlinePage;
-import com.aptana.editor.common.parsing.FileService;
 import com.aptana.editor.common.preferences.IPreferenceConstants;
 import com.aptana.editor.common.properties.CommonEditorPropertySheetPage;
 import com.aptana.editor.common.text.reconciler.IFoldingComputer;
@@ -174,7 +173,6 @@ public abstract class AbstractThemeableEditor extends AbstractFoldingEditor impl
 	private ICommandElementsProvider fCommandElementsProvider;
 
 	private CommonOutlinePage fOutlinePage;
-	private FileService fFileService;
 
 	private boolean fCursorChangeListened;
 	private SelectionChangedListener fSelectionChangedListener;
@@ -479,11 +477,6 @@ public abstract class AbstractThemeableEditor extends AbstractFoldingEditor impl
 			}
 
 			fCommandElementsProvider = null;
-			if (fFileService != null)
-			{
-				fFileService.dispose();
-				fFileService = null;
-			}
 			fPeerCharacterCloser = null;
 		}
 		finally
