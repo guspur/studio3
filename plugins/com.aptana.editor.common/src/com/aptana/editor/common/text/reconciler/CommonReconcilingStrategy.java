@@ -25,6 +25,7 @@ import org.eclipse.jface.text.reconciler.IReconcilingStrategy;
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension;
 import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
@@ -39,24 +40,39 @@ import com.aptana.core.logging.IdeLog;
 import com.aptana.editor.common.AbstractThemeableEditor;
 import com.aptana.editor.common.CommonAnnotationModel;
 import com.aptana.editor.common.CommonEditorPlugin;
-import com.aptana.editor.common.parsing.FileService;
+import com.aptana.editor.common.outline.CommonOutlinePage;
+import com.aptana.parsing.ast.IParseNode;
 
 public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconcilingStrategyExtension,
 		IBatchReconcilingStrategy
 {
 
+	/**
+	 * The editor we're operating on.
+	 */
 	private AbstractThemeableEditor fEditor;
 	private boolean fInitialReconcileDone;
 
+	private IProgressMonitor fMonitor;
+
+	/**
+	 * The folder that calculates folding positions for this editor.
+	 */
+	private IFoldingComputer folder;
 	/**
 	 * Code Folding.
 	 */
 	private Map<ProjectionAnnotation, Position> fPositions = new HashMap<ProjectionAnnotation, Position>();
 
-	private IProgressMonitor fMonitor;
-
-	private IFoldingComputer folder;
+	/**
+	 * The working copy we're operating on.
+	 */
 	private IDocument fDocument;
+
+	/**
+	 * Flag used to auto-expand outlines to 2nd level on first open.
+	 */
+	private boolean autoExpanded;
 
 	public CommonReconcilingStrategy(AbstractThemeableEditor editor)
 	{
@@ -92,8 +108,8 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 	public void setDocument(IDocument document)
 	{
 		folder = createFoldingComputer(document);
-		fEditor.getFileService().setDocument(document);
 		fDocument = document;
+		autoExpanded = false;
 	}
 
 	protected IFoldingComputer createFoldingComputer(IDocument document)
@@ -188,30 +204,48 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 
 	private void reconcile(boolean initialReconcile, boolean force)
 	{
-		FileService fileService = fEditor.getFileService();
-		// doing a full parse at the moment
-		if (force || fileService.parse(fMonitor))
+		// Refresh the outline...
+		Display.getDefault().asyncExec(new Runnable()
 		{
-			// only do folding and validation when the source was changed
-			if (fEditor.isFoldingEnabled())
+			public void run()
 			{
-				calculatePositions(initialReconcile, fMonitor);
-			}
-			else
-			{
-				synchronized (fPositions)
+				if (fEditor.hasOutlinePageCreated())
 				{
-					fPositions.clear();
+					IParseNode node = fEditor.getAST();
+
+					if (node != null)
+					{
+						CommonOutlinePage page = fEditor.getOutlinePage();
+						page.refresh();
+						if (!autoExpanded)
+						{
+							page.expandToLevel(2);
+							autoExpanded = true;
+						}
+					}
 				}
-				updatePositions();
 			}
-			if (fMonitor != null && fMonitor.isCanceled())
-			{
-				return;
-			}
-			// fEditor.getFileService().validate();
-			runParticipants();
+		});
+
+		// FIXME only do folding and validation when the source was changed
+		if (fEditor.isFoldingEnabled())
+		{
+			calculatePositions(initialReconcile, fMonitor);
 		}
+		else
+		{
+			synchronized (fPositions)
+			{
+				fPositions.clear();
+			}
+			updatePositions();
+		}
+		if (fMonitor != null && fMonitor.isCanceled())
+		{
+			return;
+		}
+		runParticipants();
+
 	}
 
 	private void runParticipants()
@@ -223,7 +257,7 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 			return;
 		}
 
-		String contentTypeId = fEditor.getFileService().getContentType();
+		String contentTypeId = fEditor.getContentType();
 		ReconcileContext context = new ReconcileContext(contentTypeId, file, fDocument.get());
 		IBuildParticipantManager manager = BuildPathCorePlugin.getDefault().getBuildParticipantManager();
 		List<IBuildParticipant> participants = manager.getBuildParticipants(contentTypeId);

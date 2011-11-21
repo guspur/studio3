@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextViewer;
@@ -25,6 +24,7 @@ import org.eclipse.swt.graphics.Image;
 
 import beaver.Scanner;
 
+import com.aptana.core.logging.IdeLog;
 import com.aptana.core.util.ArrayUtil;
 import com.aptana.core.util.StringUtil;
 import com.aptana.editor.common.AbstractThemeableEditor;
@@ -33,7 +33,7 @@ import com.aptana.editor.common.contentassist.CommonCompletionProposal;
 import com.aptana.editor.common.contentassist.ILexemeProvider;
 import com.aptana.editor.common.contentassist.UserAgentManager;
 import com.aptana.editor.common.outline.IParseListener;
-import com.aptana.editor.common.parsing.FileService;
+import com.aptana.editor.js.IJSConstants;
 import com.aptana.editor.js.JSLanguageConstants;
 import com.aptana.editor.js.JSPlugin;
 import com.aptana.editor.js.JSSourceConfiguration;
@@ -56,6 +56,7 @@ import com.aptana.editor.js.parsing.ast.JSObjectNode;
 import com.aptana.editor.js.parsing.lexer.JSTokenType;
 import com.aptana.index.core.Index;
 import com.aptana.parsing.IParseState;
+import com.aptana.parsing.ParserPoolFactory;
 import com.aptana.parsing.ast.IParseNode;
 import com.aptana.parsing.lexer.IRange;
 import com.aptana.parsing.lexer.Lexeme;
@@ -532,33 +533,38 @@ public class JSContentAssistProcessor extends CommonContentAssistProcessor
 	 */
 	IParseNode getActiveASTNode(int offset)
 	{
+		JSParseState jsParseState = new JSParseState();
+		// turn off all comment processing
+		jsParseState.setAttachComments(false);
+		jsParseState.setCollectComments(false);
+
 		// (possibly) force a parse
-		FileService fs = editor.getFileService();
-
-		fs.addListener(getParseListener());
-		fs.parse(new NullProgressMonitor());
-		fs.removeListener(getParseListener());
-
-		IParseNode ast = getAST();
 		IParseNode result = null;
-
-		if (ast != null)
+		try
 		{
-			result = ast.getNodeAtOffset(offset);
-
-			// We won't get a current node if the cursor is outside of the positions
-			// recorded by the AST
-			if (result == null)
+			IParseNode ast = ParserPoolFactory.parse(IJSConstants.CONTENT_TYPE_JS, jsParseState);
+			if (ast != null)
 			{
-				if (offset < ast.getStartingOffset())
+				result = ast.getNodeAtOffset(offset);
+
+				// We won't get a current node if the cursor is outside of the positions
+				// recorded by the AST
+				if (result == null)
 				{
-					result = ast.getNodeAtOffset(ast.getStartingOffset());
-				}
-				else if (ast.getEndingOffset() < offset)
-				{
-					result = ast.getNodeAtOffset(ast.getEndingOffset());
+					if (offset < ast.getStartingOffset())
+					{
+						result = ast.getNodeAtOffset(ast.getStartingOffset());
+					}
+					else if (ast.getEndingOffset() < offset)
+					{
+						result = ast.getNodeAtOffset(ast.getEndingOffset());
+					}
 				}
 			}
+		}
+		catch (Exception e)
+		{
+			IdeLog.logError(JSPlugin.getDefault(), "Failed to parse the content", e); //$NON-NLS-1$
 		}
 
 		return result;

@@ -63,19 +63,6 @@
       </hyperlinkDetector>
    </extension>
    <extension
-         point="com.aptana.editor.common.validator">
-      <content-type
-            name="%validator.language.css.name"
-            id="com.aptana.contenttype.css">
-      </content-type>
-      <validator
-            class="com.aptana.editor.css.validator.CSSValidator"
-            content-type="com.aptana.contenttype.css"
-            marker-type="com.aptana.editor.css.problem"
-            name="%validator.css.name">
-      </validator>
-   </extension>
-   <extension
          point="org.eclipse.ui.preferencePages">
       <page
             category="com.aptana.editor.common.preferences.EditorsPreferencePage"
@@ -127,6 +114,14 @@
       <participant
             class="com.aptana.editor.css.internal.build.CSSTaskDetector"
             priority="50">
+         <contentTypeBinding
+               contentTypeId="com.aptana.contenttype.css">
+         </contentTypeBinding>
+      </participant>
+      <participant
+            class="com.aptana.editor.css.validator.CSSValidator"
+            name="%validator.css.name"
+            priority="49">
          <contentTypeBinding
                contentTypeId="com.aptana.contenttype.css">
          </contentTypeBinding>
