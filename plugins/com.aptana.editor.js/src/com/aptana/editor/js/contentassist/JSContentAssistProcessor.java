@@ -32,7 +32,6 @@ import com.aptana.editor.common.CommonContentAssistProcessor;
 import com.aptana.editor.common.contentassist.CommonCompletionProposal;
 import com.aptana.editor.common.contentassist.ILexemeProvider;
 import com.aptana.editor.common.contentassist.UserAgentManager;
-import com.aptana.editor.common.outline.IParseListener;
 import com.aptana.editor.js.JSLanguageConstants;
 import com.aptana.editor.js.JSPlugin;
 import com.aptana.editor.js.JSSourceConfiguration;
@@ -45,7 +44,6 @@ import com.aptana.editor.js.inferencing.JSPropertyCollection;
 import com.aptana.editor.js.inferencing.JSScope;
 import com.aptana.editor.js.parsing.JSFlexLexemeProvider;
 import com.aptana.editor.js.parsing.JSFlexScanner;
-import com.aptana.editor.js.parsing.JSParseState;
 import com.aptana.editor.js.parsing.ast.IJSNodeTypes;
 import com.aptana.editor.js.parsing.ast.JSArgumentsNode;
 import com.aptana.editor.js.parsing.ast.JSFunctionNode;
@@ -54,7 +52,6 @@ import com.aptana.editor.js.parsing.ast.JSNode;
 import com.aptana.editor.js.parsing.ast.JSObjectNode;
 import com.aptana.editor.js.parsing.lexer.JSTokenType;
 import com.aptana.index.core.Index;
-import com.aptana.parsing.IParseState;
 import com.aptana.parsing.ast.IParseNode;
 import com.aptana.parsing.lexer.IRange;
 import com.aptana.parsing.lexer.Lexeme;
@@ -80,7 +77,6 @@ public class JSContentAssistProcessor extends CommonContentAssistProcessor
 	private IParseNode _targetNode;
 	private IParseNode _statementNode;
 	private IRange _replaceRange;
-	private IParseListener _parseListener;
 
 	// NOTE: temp (I hope) until we get proper partitions for JS inside of HTML
 	private IRange _activeRange;
@@ -929,54 +925,6 @@ public class JSContentAssistProcessor extends CommonContentAssistProcessor
 	public boolean isValidActivationCharacter(char c, int keyCode)
 	{
 		return Character.isWhitespace(c);
-	}
-
-	/**
-	 * getParseListener
-	 * 
-	 * @return
-	 */
-	protected IParseListener getParseListener()
-	{
-		if (_parseListener == null)
-		{
-			_parseListener = new IParseListener()
-			{
-				public void beforeParse(IParseState parseState)
-				{
-					// NOTE: We turn off all comment processing if we have a JSParseState associated with this file's
-					// FileService.
-					// If a previous parse included comment processing, that's fine as well
-					if (parseState instanceof JSParseState)
-					{
-						JSParseState jsParseState = (JSParseState) parseState;
-
-						// save old settings
-						jsParseState.pushCommentContext();
-
-						// turn off all comment processing
-						jsParseState.setAttachComments(false);
-						jsParseState.setCollectComments(false);
-					}
-				}
-
-				public void parseCompletedSuccessfully()
-				{
-				}
-
-				public void afterParse(IParseState parseState)
-				{
-					if (parseState instanceof JSParseState)
-					{
-						JSParseState jsParseState = (JSParseState) parseState;
-
-						jsParseState.popCommentContext();
-					}
-				}
-			};
-		}
-
-		return _parseListener;
 	}
 
 	/*

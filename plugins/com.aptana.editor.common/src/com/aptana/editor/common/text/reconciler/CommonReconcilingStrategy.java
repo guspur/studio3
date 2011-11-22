@@ -90,7 +90,7 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 		});
 	}
 
-	public AbstractThemeableEditor getEditor()
+	protected AbstractThemeableEditor getEditor()
 	{
 		return fEditor;
 	}
@@ -132,18 +132,7 @@ public class CommonReconcilingStrategy implements IReconcilingStrategy, IReconci
 		fMonitor = monitor;
 	}
 
-	public void aboutToBeReconciled()
-	{
-	}
-
-	public void notifyListeners(boolean notify)
-	{
-	}
-
-	public void reconciled()
-	{
-	}
-
+	// FIXME Can folding be made into a build participant?
 	protected void calculatePositions(boolean initialReconcile, IProgressMonitor monitor)
 	{
 		if (monitor != null && monitor.isCanceled())
